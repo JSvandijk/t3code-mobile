@@ -1,0 +1,8 @@
+node_modules/
+apk/build/
+*.pem
+*.zip
+*.apk
+*.aab
+*.keystore
+.env

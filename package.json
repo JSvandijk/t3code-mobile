@@ -1,0 +1,33 @@
+{
+  "name": "t3code-mobile",
+  "version": "1.0.0",
+  "description": "Unofficial Android companion and optional HTTPS PWA proxy for T3 Code.",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "build:apk": "build-apk.bat",
+    "generate:icons": "node generate-icons.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "t3-code",
+    "android",
+    "webview",
+    "tailscale",
+    "pwa"
+  ],
+  "author": "JSvandijk",
+  "license": "MIT",
+  "type": "commonjs",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/JSvandijk/t3code-mobile.git"
+  },
+  "bugs": {
+    "url": "https://github.com/JSvandijk/t3code-mobile/issues"
+  },
+  "homepage": "https://github.com/JSvandijk/t3code-mobile#readme",
+  "dependencies": {
+    "http-proxy": "^1.18.1"
+  }
+}
