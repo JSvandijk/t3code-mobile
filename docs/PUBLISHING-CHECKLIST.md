@@ -9,6 +9,8 @@ Use this before creating a public release or making a broader push for stars, us
 - Add focused topics such as `t3-code`, `android`, `tailscale`, `self-hosted`, `webview`, `pwa`, `remote-access`, `mobile-companion`
 - Upload `docs/images/social-preview.png` as the GitHub social preview image
 - Enable Issues and Discussions if you want community support to happen in public
+- Enable private vulnerability reporting
+- Verify branch protection is active on `main`
 
 ## README And Docs
 
@@ -40,6 +42,7 @@ Use this before creating a public release or making a broader push for stars, us
 - Label broader contributor work with `help wanted`
 - Respond quickly to the first external bug reports and pull requests
 - Keep `ROADMAP.md` realistic so contributors can see where help is useful
+- Keep [MAINTAINER-SETUP.md](MAINTAINER-SETUP.md) aligned with the actual GitHub settings
 
 ## Release Notes
 

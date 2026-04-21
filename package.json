@@ -1,6 +1,6 @@
 {
   "name": "t3code-mobile",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Unofficial Android companion and optional HTTPS PWA proxy for T3 Code.",
   "main": "server.js",
   "scripts": {

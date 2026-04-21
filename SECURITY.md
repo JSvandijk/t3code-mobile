@@ -9,19 +9,22 @@ T3 Code Mobile is designed for self-hosted use over Tailscale or another trusted
 - WebView permission abuse
 - proxy misconfiguration that could expose a local T3 instance
 
+Current audit notes and mitigations are tracked in [docs/SECURITY-AUDIT.md](docs/SECURITY-AUDIT.md).
+
 ## Supported Versions
 
 Only the latest state of the default branch is considered supported for security fixes.
 
 ## Reporting A Vulnerability
 
-If GitHub private vulnerability reporting is enabled for the repository, use that first.
+GitHub private vulnerability reporting should be enabled for this repository and is the preferred path for sensitive reports.
 
-If private reporting is not available, do not post secrets, tokens, private URLs, or exploit details in a public issue. Instead:
+If private vulnerability reporting is unavailable for some reason, do not post secrets, tokens, private URLs, or exploit details in a public issue. Open a minimal issue requesting a private follow-up and wait before sharing proof-of-concept details.
 
-1. Open a minimal public issue requesting a private security follow-up.
-2. Include only enough information to confirm that the problem exists.
-3. Wait before publishing proof-of-concept details.
+Target response windows:
+
+- initial maintainer acknowledgement within 7 days
+- status update within 14 days when the issue is reproducible
 
 ## Security Notes For Users
 

@@ -19,11 +19,13 @@ set "PLATFORM=%ANDROID_SDK%\platforms\%ANDROID_PLATFORM%"
 set "PROJECT=%ROOT%\apk"
 set "SRC=%PROJECT%\app\src\main"
 set "BUILD=%PROJECT%\build"
+set "SIGNING=%PROJECT%\signing"
 set "GEN=%BUILD%\gen"
 set "CLASSES=%BUILD%\classes"
 set "OUTPUT=%BUILD%\output"
 set "COMPILED_RES=%BUILD%\compiled_res"
 set "DEX=%BUILD%\dex"
+set "DEBUG_KEYSTORE=%SIGNING%\debug.keystore"
 
 if not exist "%JAVA_HOME%\bin\javac.exe" (
     echo JAVA_HOME is not configured correctly.
@@ -50,6 +52,7 @@ mkdir "%CLASSES%"
 mkdir "%OUTPUT%"
 mkdir "%COMPILED_RES%"
 mkdir "%DEX%"
+if not exist "%SIGNING%" mkdir "%SIGNING%"
 
 echo [2/8] Compiling Android resources
 for /r "%SRC%\res" %%f in (*.xml *.png) do (
@@ -124,9 +127,9 @@ if errorlevel 1 (
 )
 
 echo [7/8] Preparing signing key
-if not exist "%BUILD%\debug.keystore" (
+if not exist "%DEBUG_KEYSTORE%" (
     keytool -genkeypair -v ^
-        -keystore "%BUILD%\debug.keystore" ^
+        -keystore "%DEBUG_KEYSTORE%" ^
         -alias t3code-mobile ^
         -keyalg RSA ^
         -keysize 2048 ^
@@ -138,7 +141,7 @@ if not exist "%BUILD%\debug.keystore" (
 
 echo [8/8] Signing APK
 call "%BUILD_TOOLS%\apksigner.bat" sign ^
-    --ks "%BUILD%\debug.keystore" ^
+    --ks "%DEBUG_KEYSTORE%" ^
     --ks-key-alias t3code-mobile ^
     --ks-pass pass:t3code123 ^
     --key-pass pass:t3code123 ^

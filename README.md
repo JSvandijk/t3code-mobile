@@ -26,6 +26,8 @@ If that is the exact problem you have, this repo is deliberately small enough to
 
 - Native Android WebView wrapper with no browser chrome
 - One-time base URL setup with reconnect support
+- Full pairing links can be pasted; the app extracts and saves only the base URL
+- In-app menu for reload, connection info, and changing the saved server
 - Persistent inline image upload button next to the composer controls
 - MutationObserver-based reinjection so the upload button survives SPA navigation
 - Optional HTTPS reverse proxy that adds a manifest, service worker, and installable PWA behavior
@@ -82,10 +84,20 @@ Set the environment variables from [.env.example](.env.example) if you need cust
 ## How It Works
 
 - The Android app opens your T3 Code instance in a fullscreen WebView.
+- The app keeps navigation scoped to the configured T3 server; other links are handed off to the device browser.
 - After each page load, the app injects a custom image button into the composer footer.
 - A hidden file input is recreated when needed during SPA navigation.
 - Selected images are passed into T3 Code through a `ClipboardEvent` paste flow.
 - The optional proxy injects PWA metadata and service worker registration into the upstream HTML.
+
+## Security Notes
+
+- The app no longer proceeds past invalid TLS certificates.
+- HTTPS is preferred when you can issue a trusted certificate.
+- Cleartext HTTP remains supported for Tailscale or another trusted private network because that is a core self-hosted use case.
+- The app intentionally stays scoped to one configured server host inside the WebView; other destinations open outside the app.
+
+See [docs/SECURITY-AUDIT.md](docs/SECURITY-AUDIT.md) for the current audit notes, fixes, and remaining tradeoffs.
 
 ## Contributing
 
@@ -115,6 +127,8 @@ High-value contribution areas right now:
 ## Status
 
 This repo is public and usable today, but still early. The current priority is reliability, better onboarding, and making it easy for outside contributors to help without having to reverse-engineer the codebase.
+
+One honest current limitation: invalid-HTTPS failure UX still needs another pass. The app blocks the load, but the emulator test path still needs a cleaner visible error state.
 
 ## Positioning
 

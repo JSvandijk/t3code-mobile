@@ -11,3 +11,11 @@ apk/build/
 /t3-after-connect.png
 /t3-after-connect.xml
 /t3-ui.xml
+/t3-connect-pass.png
+/t3-connect-pass.xml
+/t3-harness-result.png
+/t3-harness-result.xml
+/t3-https-entry.xml
+/t3-ssl-*.png
+/t3-ssl-*.xml
+/tmp-webview-harness/

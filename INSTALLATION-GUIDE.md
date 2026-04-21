@@ -52,12 +52,13 @@ What you need:
 ### 4. Connect And Pair
 
 1. Open the app.
-2. Enter the base URL from the desktop app.
+2. Enter the base URL from the desktop app, or paste the full pairing link and let the app keep only the base URL.
 3. Tap `Connect`.
 4. Complete the normal T3 Code pairing flow.
 5. Enter the pairing token when prompted.
 
 After pairing, the app remembers the base URL.
+Use the in-app `Menu` button if you want to reload the session, inspect connection info, or change the saved server later.
 
 ## Option B: HTTPS PWA Proxy
 
@@ -99,6 +100,7 @@ Open the printed HTTPS URL from your phone and use your browser's "Add to Home S
 - Verify Tailscale is running on both devices
 - Verify the Tailscale hostname or private address is correct
 - Verify the URL includes the port, usually `:3773`
+- Use the in-app `Connection info` view from the `Menu` button for the latest error and URL details
 
 ### Pairing fails
 
@@ -116,3 +118,9 @@ Open the printed HTTPS URL from your phone and use your browser's "Add to Home S
 
 - Use a certificate trusted by your device, or import the cert if appropriate for your setup
 - Confirm `PUBLIC_URL` matches the address you actually open from your phone
+
+### The Android app blocks an HTTPS server
+
+- The app now blocks invalid or mismatched TLS certificates instead of bypassing them
+- Use a valid trusted certificate if you want HTTPS inside the app
+- If you are on Tailscale or another trusted private network, HTTP may be simpler for self-hosted use

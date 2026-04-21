@@ -7,6 +7,7 @@ This roadmap is intentionally short and practical. The goal is to make the proje
 - Improve connection diagnostics and error states
 - Add an in-app way to edit or reset the saved server URL
 - Harden SSL, mixed-content, and permission handling
+- Fix the blank-screen UX on blocked HTTPS / certificate failures
 - Make the composer image button more resilient to upstream T3 UI changes
 - Improve automated release notes and release testing
 
