@@ -71,6 +71,11 @@ body:
     validations:
       required: true
   - type: textarea
+    id: diagnostics
+    attributes:
+      label: Diagnostics or health output
+      description: Paste the in-app diagnostics report or `/__t3mobile/health` output if available. Remove any private hostnames or tokens first.
+  - type: textarea
     id: extra
     attributes:
       label: Extra context

@@ -42,6 +42,18 @@ npm test
 npm start
 ```
 
+### Local Android WebView harness
+
+Use the harness when you need to reproduce upload-button behavior or certificate failures locally:
+
+```bash
+npm run harness:http
+npm run harness:https-bad-cert
+npm run harness:redirect
+```
+
+See [docs/WEBVIEW-HARNESS.md](docs/WEBVIEW-HARNESS.md) for emulator URLs and what each mode is intended to prove.
+
 ## Contribution Guidelines
 
 - Keep pull requests narrowly scoped.
@@ -56,6 +68,7 @@ npm start
 - The README or docs were updated if needed
 - `npm test` passes
 - Manual testing was done for any user-facing behavior
+- Include screenshots or copied diagnostics when they materially help review
 - The PR description explains what changed and how it was tested
 
 ## Good First Issues

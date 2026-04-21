@@ -4,6 +4,7 @@ const httpProxy = require('http-proxy');
 const zlib = require('zlib');
 const fs = require('fs');
 const path = require('path');
+const pkg = require('./package.json');
 
 const repoPath = (targetPath) => path.resolve(__dirname, targetPath);
 const fromEnvOrDefault = (name, fallback) => process.env[name] || fallback;
@@ -15,6 +16,7 @@ const T3_TARGET = fromEnvOrDefault('T3_TARGET', 'http://127.0.0.1:3773');
 const PUBLIC_URL = fromEnvOrDefault('PUBLIC_URL', `https://localhost:${HTTPS_PORT}`);
 const SSL_KEY_PATH = resolveMaybeRelative(fromEnvOrDefault('SSL_KEY_PATH', './key.pem'));
 const SSL_CERT_PATH = resolveMaybeRelative(fromEnvOrDefault('SSL_CERT_PATH', './cert.pem'));
+const HEALTH_PATH = '/__t3mobile/health';
 
 const sslOptions = {
   key: fs.readFileSync(SSL_KEY_PATH),
@@ -74,6 +76,75 @@ const proxy = httpProxy.createProxyServer({
   selfHandleResponse: true,
 });
 
+const requestTarget = (targetUrl) => new Promise((resolve) => {
+  const url = new URL(targetUrl);
+  const client = url.protocol === 'https:' ? https : http;
+  const request = client.request(url, {
+    method: 'GET',
+    timeout: 4000,
+    headers: {
+      Accept: 'text/html,application/json;q=0.9,*/*;q=0.1',
+      'User-Agent': `t3code-mobile-health/${pkg.version}`,
+    },
+  }, (response) => {
+    const chunks = [];
+    response.on('data', (chunk) => {
+      if (Buffer.concat(chunks).length < 512) {
+        chunks.push(chunk);
+      }
+    });
+    response.on('end', () => {
+      const preview = Buffer.concat(chunks).toString('utf8').replace(/\s+/g, ' ').trim().slice(0, 200);
+      resolve({
+        ok: response.statusCode >= 200 && response.statusCode < 400,
+        statusCode: response.statusCode,
+        contentType: response.headers['content-type'] || null,
+        preview,
+      });
+    });
+  });
+
+  request.on('timeout', () => request.destroy(new Error('Timed out while probing the upstream target.')));
+  request.on('error', (error) => {
+    resolve({
+      ok: false,
+      statusCode: null,
+      contentType: null,
+      preview: '',
+      error: error.message,
+    });
+  });
+  request.end();
+});
+
+const sendJson = (res, statusCode, payload) => {
+  res.writeHead(statusCode, {
+    'Content-Type': 'application/json; charset=utf-8',
+    'Cache-Control': 'no-store, must-revalidate',
+  });
+  res.end(JSON.stringify(payload, null, 2));
+};
+
+const serveHealth = async (res) => {
+  const upstream = await requestTarget(T3_TARGET);
+  const payload = {
+    ok: upstream.ok,
+    service: 't3code-mobile-proxy',
+    version: pkg.version,
+    publicUrl: PUBLIC_URL,
+    target: T3_TARGET,
+    timestamp: new Date().toISOString(),
+    uptimeSeconds: Math.round(process.uptime()),
+    tls: {
+      keyPath: SSL_KEY_PATH,
+      certPath: SSL_CERT_PATH,
+    },
+    upstream,
+  };
+
+  sendJson(res, upstream.ok ? 200 : 503, payload);
+};
+
 proxy.on('proxyReq', (proxyReq) => {
   proxyReq.removeHeader('Accept-Encoding');
 });
@@ -127,6 +198,20 @@ proxy.on('error', (err, req, res) => {
 
 const handler = (req, res) => {
   const urlPath = req.url.split('?')[0];
+  if (urlPath === HEALTH_PATH) {
+    serveHealth(res).catch((error) => {
+      sendJson(res, 500, {
+        ok: false,
+        service: 't3code-mobile-proxy',
+        version: pkg.version,
+        target: T3_TARGET,
+        timestamp: new Date().toISOString(),
+        error: error.message,
+      });
+    });
+    return;
+  }
+
   if (staticFiles[urlPath]) {
     const { file, type, cacheControl } = staticFiles[urlPath];
     try {

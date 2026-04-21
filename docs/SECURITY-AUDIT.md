@@ -73,6 +73,8 @@ Tests run on April 21, 2026:
 
 - `npm test`
 - `build-apk.bat`
+- `npm run harness:http`
+- `npm run harness:https-bad-cert`
 - APK install on Android emulator
 - app launch in emulator
 - first-run connect screen validation
@@ -180,6 +182,7 @@ What this repo should not claim:
 - add optional host allowlisting for more than one trusted origin if the product needs it
 - add a lightweight security review to every release
 - add emulator or device smoke tests for HTTP, HTTPS, and blocked certificate flows
+- keep the local harness scripts and docs aligned with the current contributor workflow
 - publish tested device and Android version notes in release descriptions
 
 ## References

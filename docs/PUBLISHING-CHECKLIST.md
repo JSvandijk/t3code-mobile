@@ -17,6 +17,9 @@ Use this before creating a public release or making a broader push for stars, us
 - Confirm the README still matches the current app behavior
 - Keep all public docs in English
 - Keep at least one current screenshot in the README
+- Keep [SHOWCASE.md](SHOWCASE.md) aligned with what the repo actually proves
+- Keep [SCREENSHOTS.md](SCREENSHOTS.md) aligned with the current approved asset set
+- Keep [WEBVIEW-HARNESS.md](WEBVIEW-HARNESS.md) aligned with the actual contributor test commands
 - Make sure no tokens, private URLs, or personal IPs appear anywhere in docs or screenshots
 - Keep the disclaimer visible
 
@@ -25,6 +28,7 @@ Use this before creating a public release or making a broader push for stars, us
 - Build a fresh APK from a clean working tree
 - Install it on a second Android device
 - Test first-run pairing
+- Test pasting a full pairing link and confirm only the base URL is retained
 - Test reconnect with the saved URL
 - Test the photo upload button in a real chat
 - Note the Android version, device model, and T3 Code version tested
@@ -51,4 +55,5 @@ Use this before creating a public release or making a broader push for stars, us
 - Let the release workflow publish `T3Code-v<version>.apk` and `T3Code-v<version>.apk.sha256`
 - Use GitHub's automatically generated release notes, then edit the intro paragraph by hand
 - Include a short tested-on note and any known limitations
+- Link to [SHOWCASE.md](SHOWCASE.md) if you want maintainers or contributors to evaluate the project quickly
 - Link to [COMPARISON.md](COMPARISON.md) so readers understand project scope immediately

@@ -60,7 +60,7 @@ For public releases, prefer the GitHub release asset and verify the matching `.s
 5. Enter the pairing token when prompted.
 
 After pairing, the app remembers the base URL.
-Use the in-app `Menu` button if you want to reload the session, inspect connection info, or change the saved server later.
+Use the in-app `Menu` button if you want to reload the session, inspect connection info, run diagnostics, copy a report, or change the saved server later.
 
 ## Option B: HTTPS PWA Proxy
 
@@ -94,6 +94,8 @@ npm start
 
 Open the printed HTTPS URL from your phone and use your browser's "Add to Home Screen" or install action.
 
+For troubleshooting or smoke tests, open `https://your-proxy-host:3780/__t3mobile/health` and confirm the JSON shows a healthy upstream target.
+
 ## Troubleshooting
 
 ### The app cannot connect
@@ -102,7 +104,7 @@ Open the printed HTTPS URL from your phone and use your browser's "Add to Home S
 - Verify Tailscale is running on both devices
 - Verify the Tailscale hostname or private address is correct
 - Verify the URL includes the port, usually `:3773`
-- Use the in-app `Connection info` view from the `Menu` button for the latest error and URL details
+- Use the in-app `Connection info` view or `Run diagnostics` from the `Menu` button for the latest error, HTTP status, SSL warning, and probe details
 
 ### Pairing fails
 

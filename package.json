@@ -7,10 +7,14 @@
     "start": "node server.js",
     "build:apk": "build-apk.bat",
     "generate:icons": "node generate-icons.js",
-    "check:js": "node --check server.js && node --check generate-icons.js && node --check sw.js && node --check check-release.js",
+    "check:js": "node --check server.js && node --check generate-icons.js && node --check sw.js && node --check check-release.js && node --check smoke-proxy.js && node --check webview-harness.js",
     "check:manifest": "node -e \"JSON.parse(require('fs').readFileSync('manifest.json', 'utf8')); console.log('manifest.json OK')\"",
     "check:release": "node check-release.js",
-    "test": "npm run check:js && npm run check:manifest && npm run check:release"
+    "test:proxy": "node smoke-proxy.js",
+    "harness:http": "node webview-harness.js --mode=http",
+    "harness:https-bad-cert": "node webview-harness.js --mode=https-bad-cert",
+    "harness:redirect": "node webview-harness.js --mode=redirect",
+    "test": "npm run check:js && npm run check:manifest && npm run check:release && npm run test:proxy"
   },
   "keywords": [
     "t3-code",

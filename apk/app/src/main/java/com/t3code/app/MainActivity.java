@@ -3,14 +3,22 @@ package com.t3code.app;
 import android.Manifest;
 import android.app.Activity;
 import android.app.AlertDialog;
+import android.content.ClipData;
+import android.content.ClipboardManager;
+import android.content.Context;
 import android.content.ActivityNotFoundException;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.graphics.Color;
 import android.graphics.PorterDuff;
+import android.net.ConnectivityManager;
+import android.net.Network;
+import android.net.NetworkCapabilities;
 import android.net.Uri;
 import android.net.http.SslError;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
@@ -27,6 +35,7 @@ import android.webkit.WebChromeClient;
 import android.webkit.WebResourceError;
 import android.webkit.WebResourceRequest;
 import android.webkit.WebResourceResponse;
+import android.webkit.RenderProcessGoneDetail;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
@@ -37,7 +46,13 @@ import android.widget.LinearLayout;
 import android.widget.ProgressBar;
 import android.widget.ScrollView;
 import android.widget.TextView;
+import android.widget.Toast;
 
+import java.io.InputStream;
+import java.net.HttpURLConnection;
+import java.net.URL;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.Locale;
 
 public class MainActivity extends Activity {
@@ -47,12 +62,20 @@ public class MainActivity extends Activity {
     private static final int FILE_PICKER_REQUEST = 1001;
     private static final int AUDIO_PERMISSION_REQUEST = 1002;
     private static final long LOAD_TIMEOUT_MS = 10000;
+    private static final int DIAGNOSTIC_TIMEOUT_MS = 5000;
+    private static final String PROXY_HEALTH_PATH = "/__t3mobile/health";
+    private static final String DEFAULT_RECOMMENDATION = "No recommendation yet.";
 
     private WebView webView;
     private String serverUrl;
     private String lastLoadedUrl = "Not loaded yet";
     private String lastErrorMessage = "No errors yet";
     private String lastSslWarning = "No certificate warnings";
+    private int lastHttpStatusCode = -1;
+    private boolean currentLoadFailed = false;
+    private boolean hasCommittedMainFrame = false;
+    private String lastSuggestedFix = DEFAULT_RECOMMENDATION;
+    private String lastDiagnosticReport = "No diagnostics run yet.";
 
     private ValueCallback<Uri[]> fileCallback;
     private PermissionRequest pendingPermissionRequest;
@@ -180,6 +203,26 @@ public class MainActivity extends Activity {
         });
         layout.addView(connectButton);
 
+        Button diagnosticsButton = buildSecondaryButton("Run diagnostics");
+        LinearLayout.LayoutParams diagnosticsParams = new LinearLayout.LayoutParams(
+            LinearLayout.LayoutParams.MATCH_PARENT,
+            LinearLayout.LayoutParams.WRAP_CONTENT
+        );
+        diagnosticsParams.topMargin = dp(12);
+        diagnosticsButton.setLayoutParams(diagnosticsParams);
+        diagnosticsButton.setOnClickListener(v -> {
+            String normalizedUrl = normalizeServerUrl(input.getText().toString());
+            if (normalizedUrl == null) {
+                inputError.setText("Enter a valid http:// or https:// address before running diagnostics.");
+                inputError.setVisibility(View.VISIBLE);
+                return;
+            }
+
+            inputError.setVisibility(View.GONE);
+            runDiagnostics(normalizedUrl, "Connect screen");
+        });
+        layout.addView(diagnosticsButton);
+
         if (serverUrl != null) {
             Button clearButton = buildSecondaryButton("Forget saved server");
             LinearLayout.LayoutParams clearParams = new LinearLayout.LayoutParams(
@@ -214,6 +257,10 @@ public class MainActivity extends Activity {
         serverUrl = url;
         lastErrorMessage = "No errors yet";
         lastSslWarning = "No certificate warnings";
+        lastHttpStatusCode = -1;
+        currentLoadFailed = false;
+        hasCommittedMainFrame = false;
+        lastSuggestedFix = DEFAULT_RECOMMENDATION;
 
         FrameLayout root = new FrameLayout(this);
         root.setBackgroundColor(Color.parseColor("#161616"));
@@ -221,6 +268,7 @@ public class MainActivity extends Activity {
         webView = new WebView(this);
         webView.setBackgroundColor(Color.parseColor("#161616"));
         webView.setOverScrollMode(View.OVER_SCROLL_NEVER);
+        webView.setAlpha(0f);
 
         WebSettings settings = webView.getSettings();
         settings.setJavaScriptEnabled(true);
@@ -236,7 +284,7 @@ public class MainActivity extends Activity {
         settings.setAllowContentAccess(true);
         settings.setJavaScriptCanOpenWindowsAutomatically(false);
         settings.setSupportMultipleWindows(false);
-        settings.setUserAgentString(settings.getUserAgentString() + " T3CodeMobile/1.2");
+        settings.setUserAgentString(settings.getUserAgentString() + " T3CodeMobile/" + getAppVersionName());
         settings.setAllowFileAccessFromFileURLs(false);
         settings.setAllowUniversalAccessFromFileURLs(false);
         if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
@@ -247,6 +295,16 @@ public class MainActivity extends Activity {
         CookieManager.getInstance().setAcceptThirdPartyCookies(webView, false);
 
         webView.setWebViewClient(new WebViewClient() {
+            @Override
+            public void onPageStarted(WebView view, String url, android.graphics.Bitmap favicon) {
+                super.onPageStarted(view, url, favicon);
+                currentLoadFailed = false;
+                hasCommittedMainFrame = false;
+                lastHttpStatusCode = -1;
+                updateWebViewPresentation();
+                scheduleLoadTimeout(url);
+            }
+
             @Override
             public boolean shouldOverrideUrlLoading(WebView view, WebResourceRequest request) {
                 Uri requestUri = request.getUrl();
@@ -280,7 +338,10 @@ public class MainActivity extends Activity {
             public void onReceivedSslError(WebView view, SslErrorHandler handler, SslError error) {
                 lastSslWarning = buildSslWarningMessage(error);
                 lastErrorMessage = "Connection blocked because the server certificate was invalid.";
+                currentLoadFailed = true;
+                lastSuggestedFix = "Use a trusted certificate, or switch to HTTP only on Tailscale or another trusted private network.";
                 handler.cancel();
+                updateWebViewPresentation();
                 showPageError(
                     "Certificate warning",
                     lastSslWarning + "\n\nThe app blocks invalid certificates. Use a trusted certificate or HTTP only on Tailscale or another trusted private network."
@@ -288,11 +349,21 @@ public class MainActivity extends Activity {
             }
 
             @Override
+            public void onPageCommitVisible(WebView view, String url) {
+                super.onPageCommitVisible(view, url);
+                hasCommittedMainFrame = true;
+                updateWebViewPresentation();
+            }
+
+            @Override
             public void onPageFinished(WebView view, String url) {
                 super.onPageFinished(view, url);
                 cancelLoadTimeout();
                 lastLoadedUrl = url;
-                hideErrorOverlay();
+                if (!currentLoadFailed) {
+                    hideErrorOverlay();
+                }
+                updateWebViewPresentation();
                 injectImageButton();
             }
 
@@ -300,7 +371,10 @@ public class MainActivity extends Activity {
             public void onReceivedError(WebView view, int errorCode, String description, String failingUrl) {
                 super.onReceivedError(view, errorCode, description, failingUrl);
                 cancelLoadTimeout();
+                currentLoadFailed = true;
                 lastErrorMessage = description != null ? description : "Unknown network error";
+                lastSuggestedFix = "Verify the host, port, and Tailscale or LAN reachability, then try again.";
+                updateWebViewPresentation();
                 showPageError("Connection problem", lastErrorMessage);
             }
 
@@ -309,10 +383,13 @@ public class MainActivity extends Activity {
                 super.onReceivedError(view, request, error);
                 if (request != null && request.isForMainFrame()) {
                     cancelLoadTimeout();
+                    currentLoadFailed = true;
                     String description = error != null && error.getDescription() != null
                         ? error.getDescription().toString()
                         : "Unknown network error";
                     lastErrorMessage = description;
+                    lastSuggestedFix = "Verify the host, port, and Tailscale or LAN reachability, then try again.";
+                    updateWebViewPresentation();
                     showPageError("Connection problem", description);
                 }
             }
@@ -322,12 +399,37 @@ public class MainActivity extends Activity {
                 super.onReceivedHttpError(view, request, errorResponse);
                 if (request != null && request.isForMainFrame() && errorResponse != null) {
                     cancelLoadTimeout();
+                    currentLoadFailed = true;
+                    lastHttpStatusCode = errorResponse.getStatusCode();
                     lastErrorMessage = "HTTP " + errorResponse.getStatusCode();
+                    lastSuggestedFix = errorResponse.getStatusCode() >= 500
+                        ? "The server responded but failed internally. Check whether T3 Code is still running on your main machine."
+                        : "The server rejected the request. Create a fresh pairing link or confirm the base URL is correct.";
+                    updateWebViewPresentation();
                     showPageError(
                         "Server responded with an error",
                         "HTTP " + errorResponse.getStatusCode() + " while loading " + request.getUrl()
                     );
                 }
+            }
+
+            @Override
+            public boolean onRenderProcessGone(WebView view, RenderProcessGoneDetail detail) {
+                currentLoadFailed = true;
+                lastErrorMessage = detail != null && detail.didCrash()
+                    ? "Android WebView crashed while rendering the page."
+                    : "Android WebView was terminated while rendering the page.";
+                lastSuggestedFix = "Reload the session. If this keeps happening, restart the app and update Android System WebView.";
+                if (view != null) {
+                    ViewGroup parent = (ViewGroup) view.getParent();
+                    if (parent != null) {
+                        parent.removeView(view);
+                    }
+                    view.destroy();
+                }
+                webView = null;
+                showPageError("Android WebView stopped", lastErrorMessage + "\n\n" + lastSuggestedFix);
+                return true;
             }
         });
 
@@ -433,12 +535,29 @@ public class MainActivity extends Activity {
         Button retryButton = buildPrimaryButton("Retry");
         retryButton.setOnClickListener(v -> {
             hideErrorOverlay();
-            if (webView != null) {
-                loadingBar.setVisibility(View.VISIBLE);
-                webView.reload();
-            }
+            retryCurrentPage();
         });
         card.addView(retryButton);
+
+        Button diagnosticsButton = buildSecondaryButton("Run diagnostics");
+        LinearLayout.LayoutParams diagnosticsParams = new LinearLayout.LayoutParams(
+            LinearLayout.LayoutParams.MATCH_PARENT,
+            LinearLayout.LayoutParams.WRAP_CONTENT
+        );
+        diagnosticsParams.topMargin = dp(10);
+        diagnosticsButton.setLayoutParams(diagnosticsParams);
+        diagnosticsButton.setOnClickListener(v -> runDiagnostics(serverUrl, "Error overlay"));
+        card.addView(diagnosticsButton);
+
+        Button copyReportButton = buildSecondaryButton("Copy report");
+        LinearLayout.LayoutParams copyParams = new LinearLayout.LayoutParams(
+            LinearLayout.LayoutParams.MATCH_PARENT,
+            LinearLayout.LayoutParams.WRAP_CONTENT
+        );
+        copyParams.topMargin = dp(10);
+        copyReportButton.setLayoutParams(copyParams);
+        copyReportButton.setOnClickListener(v -> copyDiagnosticReportToClipboard(true));
+        card.addView(copyReportButton);
 
         Button changeServerButton = buildSecondaryButton("Change server");
         LinearLayout.LayoutParams changeParams = new LinearLayout.LayoutParams(
@@ -480,9 +599,33 @@ public class MainActivity extends Activity {
         }
     }
 
+    private void retryCurrentPage() {
+        if (serverUrl == null) {
+            showUrlInput(null, "Enter a server URL before retrying.");
+            return;
+        }
+
+        currentLoadFailed = false;
+        hasCommittedMainFrame = false;
+        updateWebViewPresentation();
+
+        if (webView == null) {
+            loadWebView(serverUrl);
+            return;
+        }
+
+        if (loadingBar != null) {
+            loadingBar.setVisibility(View.VISIBLE);
+        }
+        scheduleLoadTimeout(serverUrl);
+        webView.reload();
+    }
+
     private void showMenuDialog() {
         String[] options = new String[] {
             "Reload current page",
+            "Run diagnostics",
+            "Copy diagnostics report",
             "Connection info",
             "Change server"
         };
@@ -490,13 +633,15 @@ public class MainActivity extends Activity {
         new AlertDialog.Builder(this)
             .setTitle("T3 Code Mobile")
             .setItems(options, (dialog, which) -> {
-                if (which == 0 && webView != null) {
-                    loadingBar.setVisibility(View.VISIBLE);
-                    scheduleLoadTimeout(serverUrl);
-                    webView.reload();
+                if (which == 0) {
+                    retryCurrentPage();
                 } else if (which == 1) {
-                    showConnectionInfoDialog();
+                    runDiagnostics(serverUrl, "In-app menu");
                 } else if (which == 2) {
+                    copyDiagnosticReportToClipboard(true);
+                } else if (which == 3) {
+                    showConnectionInfoDialog();
+                } else if (which == 4) {
                     showUrlInput(serverUrl, "You can switch servers without clearing app data.");
                 }
             })
@@ -505,21 +650,12 @@ public class MainActivity extends Activity {
     }
 
     private void showConnectionInfoDialog() {
-        StringBuilder info = new StringBuilder();
-        info.append("Base URL: ").append(serverUrl != null ? serverUrl : "Not set");
-        info.append("\n\nLast page: ").append(lastLoadedUrl);
-        info.append("\n\nLast error: ").append(lastErrorMessage);
-        info.append("\n\nSSL status: ").append(lastSslWarning);
-        if (serverUrl != null && isCleartextUrl(serverUrl)) {
-            info.append("\n\nTransport: HTTP. Continue only on Tailscale or another trusted private network.");
-        }
-        info.append("\n\nNavigation policy: Only the configured server stays inside the app. Other links open externally.");
-
         new AlertDialog.Builder(this)
             .setTitle("Connection info")
-            .setMessage(info.toString())
+            .setMessage(buildConnectionInfoReport())
             .setPositiveButton("Close", null)
-            .setNeutralButton("Change server", (dialog, which) ->
+            .setNeutralButton("Copy report", (dialog, which) -> copyDiagnosticReportToClipboard(true))
+            .setNegativeButton("Change server", (dialog, which) ->
                 showUrlInput(serverUrl, "Update the server URL or paste a fresh pairing link.")
             )
             .show();
@@ -568,6 +704,281 @@ public class MainActivity extends Activity {
                 }
             })
             .show();
+    }
+
+    private void runDiagnostics(String requestedUrl, String sourceLabel) {
+        String targetUrl = requestedUrl != null ? requestedUrl : serverUrl;
+        if (targetUrl == null) {
+            new AlertDialog.Builder(this)
+                .setTitle("Diagnostics unavailable")
+                .setMessage("Enter a server URL first so the app has something to check.")
+                .setPositiveButton("Close", null)
+                .show();
+            return;
+        }
+
+        AlertDialog progressDialog = new AlertDialog.Builder(this)
+            .setTitle("Running diagnostics")
+            .setMessage("Checking transport, HTTP reachability, and the optional proxy health endpoint.")
+            .setCancelable(false)
+            .create();
+        progressDialog.show();
+
+        new Thread(() -> {
+            String report = buildDiagnosticReport(targetUrl, sourceLabel);
+            lastDiagnosticReport = report;
+
+            runOnUiThread(() -> {
+                if (progressDialog.isShowing()) {
+                    progressDialog.dismiss();
+                }
+                showDiagnosticsDialog(report);
+            });
+        }).start();
+    }
+
+    private void showDiagnosticsDialog(String report) {
+        ScrollView scrollView = new ScrollView(this);
+        scrollView.setFillViewport(true);
+        scrollView.setPadding(dp(8), dp(8), dp(8), dp(8));
+
+        TextView reportView = new TextView(this);
+        reportView.setText(report);
+        reportView.setTextColor(Color.parseColor("#111827"));
+        reportView.setTextSize(13);
+        reportView.setTextIsSelectable(true);
+        reportView.setPadding(dp(12), dp(12), dp(12), dp(12));
+        scrollView.addView(reportView, new ViewGroup.LayoutParams(
+            ViewGroup.LayoutParams.MATCH_PARENT,
+            ViewGroup.LayoutParams.WRAP_CONTENT
+        ));
+
+        new AlertDialog.Builder(this)
+            .setTitle("Diagnostics report")
+            .setView(scrollView)
+            .setPositiveButton("Close", null)
+            .setNeutralButton("Copy report", (dialog, which) ->
+                copyTextToClipboard("T3 Code diagnostics", report, "Diagnostics report copied.")
+            )
+            .setNegativeButton("Change server", (dialog, which) ->
+                showUrlInput(serverUrl, "Update the server URL or paste a fresh pairing link.")
+            )
+            .show();
+    }
+
+    private String buildDiagnosticReport(String normalizedUrl, String sourceLabel) {
+        Uri uri = Uri.parse(normalizedUrl);
+        String host = uri.getHost();
+        StringBuilder report = new StringBuilder();
+
+        report.append("T3 Code Mobile diagnostics\n");
+        report.append("Generated: ")
+            .append(new SimpleDateFormat("yyyy-MM-dd HH:mm:ss z", Locale.US).format(new Date()))
+            .append("\n");
+        report.append("Source: ").append(sourceLabel).append("\n");
+        report.append("App version: ").append(getAppVersionName()).append("\n");
+        report.append("Android: ").append(Build.VERSION.RELEASE).append(" (SDK ").append(Build.VERSION.SDK_INT).append(")\n");
+        report.append("Device: ").append(Build.MANUFACTURER).append(" ").append(Build.MODEL).append("\n");
+        report.append("Network: ").append(describeActiveNetwork()).append("\n");
+
+        report.append("\nTarget\n");
+        report.append("Base URL: ").append(normalizedUrl).append("\n");
+        report.append("Scheme: ").append(uri.getScheme() != null ? uri.getScheme().toUpperCase(Locale.US) : "Unknown").append("\n");
+        report.append("Host: ").append(host != null ? host : "Unknown").append("\n");
+        report.append("Port: ").append(resolvePort(uri)).append("\n");
+        report.append("Looks private: ").append(isLikelyPrivateHost(host) ? "Yes" : "No").append("\n");
+
+        report.append("\nLast known app state\n");
+        report.append("Last page: ").append(lastLoadedUrl).append("\n");
+        report.append("Last error: ").append(lastErrorMessage).append("\n");
+        report.append("Last HTTP status: ").append(lastHttpStatusCode > 0 ? String.valueOf(lastHttpStatusCode) : "None").append("\n");
+        report.append("SSL status: ").append(lastSslWarning).append("\n");
+        report.append("Recommended next step: ").append(buildRecommendation(normalizedUrl)).append("\n");
+
+        appendProbe(report, "\nTarget probe", probeUrl(normalizedUrl));
+        appendProbe(report, "\nProxy health probe", probeUrl(buildProxyHealthUrl(normalizedUrl)));
+
+        return report.toString();
+    }
+
+    private void appendProbe(StringBuilder report, String sectionTitle, ProbeResult probe) {
+        report.append(sectionTitle).append("\n");
+        report.append("URL: ").append(probe.url).append("\n");
+
+        if (probe.failure != null) {
+            report.append("Outcome: ").append(probe.failure).append("\n");
+            return;
+        }
+
+        report.append("HTTP status: ").append(probe.statusCode).append("\n");
+        report.append("Content-Type: ").append(probe.contentType != null ? probe.contentType : "Unknown").append("\n");
+        if (probe.finalUrl != null) {
+            report.append("Final URL: ").append(probe.finalUrl).append("\n");
+        }
+        if (probe.preview != null && !probe.preview.isEmpty()) {
+            report.append("Preview: ").append(probe.preview).append("\n");
+        }
+    }
+
+    private ProbeResult probeUrl(String urlString) {
+        ProbeResult result = new ProbeResult(urlString);
+        HttpURLConnection connection = null;
+
+        try {
+            URL url = new URL(urlString);
+            connection = (HttpURLConnection) url.openConnection();
+            connection.setConnectTimeout(DIAGNOSTIC_TIMEOUT_MS);
+            connection.setReadTimeout(DIAGNOSTIC_TIMEOUT_MS);
+            connection.setInstanceFollowRedirects(true);
+            connection.setRequestProperty("User-Agent", "T3CodeMobile/" + getAppVersionName() + " Diagnostics");
+            connection.setRequestProperty("Accept", "text/html,application/json;q=0.9,*/*;q=0.1");
+
+            result.statusCode = connection.getResponseCode();
+            result.contentType = connection.getContentType();
+            result.finalUrl = connection.getURL() != null ? connection.getURL().toString() : null;
+            InputStream inputStream = result.statusCode >= 400 ? connection.getErrorStream() : connection.getInputStream();
+            result.preview = readPreview(inputStream, 220);
+        } catch (Exception error) {
+            String message = error.getMessage();
+            result.failure = error.getClass().getSimpleName()
+                + (message != null && !message.isEmpty() ? ": " + message : "");
+        } finally {
+            if (connection != null) {
+                connection.disconnect();
+            }
+        }
+
+        return result;
+    }
+
+    private String readPreview(InputStream inputStream, int maxChars) {
+        if (inputStream == null) {
+            return "";
+        }
+
+        try (InputStream stream = inputStream) {
+            byte[] buffer = new byte[512];
+            int bytesRead = stream.read(buffer);
+            if (bytesRead <= 0) {
+                return "";
+            }
+
+            String text = new String(buffer, 0, bytesRead);
+            text = text.replaceAll("\\s+", " ").trim();
+            if (text.length() > maxChars) {
+                return text.substring(0, maxChars) + "...";
+            }
+            return text;
+        } catch (Exception ignored) {
+            return "";
+        }
+    }
+
+    private String buildConnectionInfoReport() {
+        StringBuilder info = new StringBuilder();
+        info.append("Base URL: ").append(serverUrl != null ? serverUrl : "Not set");
+        info.append("\n\nLast page: ").append(lastLoadedUrl);
+        info.append("\n\nLast error: ").append(lastErrorMessage);
+        info.append("\n\nLast HTTP status: ").append(lastHttpStatusCode > 0 ? String.valueOf(lastHttpStatusCode) : "None");
+        info.append("\n\nSSL status: ").append(lastSslWarning);
+        info.append("\n\nRecommended next step: ").append(buildRecommendation(serverUrl));
+        if (serverUrl != null && isCleartextUrl(serverUrl)) {
+            info.append("\n\nTransport: HTTP. Continue only on Tailscale or another trusted private network.");
+        }
+        info.append("\n\nNavigation policy: Only the configured server stays inside the app. Other links open externally.");
+        return info.toString();
+    }
+
+    private String buildRecommendation(String normalizedUrl) {
+        if (lastSuggestedFix != null && !DEFAULT_RECOMMENDATION.equals(lastSuggestedFix)) {
+            return lastSuggestedFix;
+        }
+
+        if (normalizedUrl == null) {
+            return DEFAULT_RECOMMENDATION;
+        }
+
+        String host = extractHost(normalizedUrl);
+        if (isCleartextUrl(normalizedUrl) && !isLikelyPrivateHost(host)) {
+            return "Prefer HTTPS before using this host outside Tailscale or another trusted private network.";
+        }
+        if (isCleartextUrl(normalizedUrl)) {
+            return "HTTP is acceptable only on Tailscale or another trusted private network.";
+        }
+        return "If the connection still fails, run diagnostics and verify the certificate, host, and port.";
+    }
+
+    private String describeActiveNetwork() {
+        ConnectivityManager connectivityManager =
+            (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
+        if (connectivityManager == null) {
+            return "Unavailable";
+        }
+
+        Network activeNetwork = connectivityManager.getActiveNetwork();
+        if (activeNetwork == null) {
+            return "Offline or unavailable";
+        }
+
+        NetworkCapabilities capabilities = connectivityManager.getNetworkCapabilities(activeNetwork);
+        if (capabilities == null) {
+            return "Connected (details unavailable)";
+        }
+
+        StringBuilder description = new StringBuilder();
+        if (capabilities.hasTransport(NetworkCapabilities.TRANSPORT_VPN)) {
+            description.append("VPN");
+        }
+        if (capabilities.hasTransport(NetworkCapabilities.TRANSPORT_WIFI)) {
+            appendTransport(description, "Wi-Fi");
+        }
+        if (capabilities.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR)) {
+            appendTransport(description, "Cellular");
+        }
+        if (capabilities.hasTransport(NetworkCapabilities.TRANSPORT_ETHERNET)) {
+            appendTransport(description, "Ethernet");
+        }
+        if (capabilities.hasTransport(NetworkCapabilities.TRANSPORT_BLUETOOTH)) {
+            appendTransport(description, "Bluetooth");
+        }
+
+        if (description.length() == 0) {
+            description.append("Connected");
+        }
+        if (capabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_VALIDATED)) {
+            description.append(" (validated)");
+        }
+        return description.toString();
+    }
+
+    private void appendTransport(StringBuilder description, String transport) {
+        if (description.length() > 0) {
+            description.append(" + ");
+        }
+        description.append(transport);
+    }
+
+    private void copyDiagnosticReportToClipboard(boolean notifyIfMissing) {
+        String report = lastDiagnosticReport;
+        if (report == null || report.trim().isEmpty() || "No diagnostics run yet.".equals(report)) {
+            report = buildConnectionInfoReport();
+            if (notifyIfMissing) {
+                Toast.makeText(this, "No diagnostics run yet. Copied the current connection summary instead.", Toast.LENGTH_LONG).show();
+            }
+        }
+
+        copyTextToClipboard("T3 Code diagnostics", report, "Diagnostics report copied.");
+    }
+
+    private void copyTextToClipboard(String label, String value, String toastMessage) {
+        ClipboardManager clipboardManager = (ClipboardManager) getSystemService(Context.CLIPBOARD_SERVICE);
+        if (clipboardManager == null) {
+            Toast.makeText(this, "Clipboard is unavailable on this device.", Toast.LENGTH_LONG).show();
+            return;
+        }
+
+        clipboardManager.setPrimaryClip(ClipData.newPlainText(label, value));
+        Toast.makeText(this, toastMessage, Toast.LENGTH_SHORT).show();
     }
 
     private void handlePermissionRequest(PermissionRequest request) {
@@ -736,6 +1147,10 @@ public class MainActivity extends Activity {
     }
 
     private int resolvePort(Uri uri) {
+        if (uri == null) {
+            return -1;
+        }
+
         int port = uri.getPort();
         if (port > 0) {
             return port;
@@ -760,6 +1175,9 @@ public class MainActivity extends Activity {
             }
 
             lastErrorMessage = "The page did not finish loading.";
+            currentLoadFailed = true;
+            lastSuggestedFix = "If you are using HTTPS, verify the certificate. If you are using HTTP, keep it on Tailscale or another trusted private network.";
+            updateWebViewPresentation();
             showPageError(
                 "Connection timed out or was blocked",
                 "The page at " + url + " did not finish loading in time. If you are using HTTPS, verify the certificate. If you are using HTTP, keep it on Tailscale or another trusted private network."
@@ -818,6 +1236,39 @@ public class MainActivity extends Activity {
         }
 
         return builder.toString();
+    }
+
+    private void updateWebViewPresentation() {
+        if (webView == null) {
+            return;
+        }
+
+        boolean shouldShowWebView = hasCommittedMainFrame || !currentLoadFailed;
+        webView.setAlpha(shouldShowWebView ? 1f : 0f);
+    }
+
+    private String buildProxyHealthUrl(String normalizedUrl) {
+        if (normalizedUrl == null) {
+            return PROXY_HEALTH_PATH;
+        }
+
+        if (normalizedUrl.endsWith("/")) {
+            return normalizedUrl.substring(0, normalizedUrl.length() - 1) + PROXY_HEALTH_PATH;
+        }
+
+        return normalizedUrl + PROXY_HEALTH_PATH;
+    }
+
+    private String getAppVersionName() {
+        try {
+            PackageInfo packageInfo = getPackageManager().getPackageInfo(getPackageName(), 0);
+            if (packageInfo.versionName != null && !packageInfo.versionName.isEmpty()) {
+                return packageInfo.versionName;
+            }
+        } catch (Exception ignored) {
+        }
+
+        return "dev";
     }
 
     private Button buildPrimaryButton(String text) {
@@ -1057,5 +1508,18 @@ public class MainActivity extends Activity {
         }
 
         super.onDestroy();
+    }
+
+    private static final class ProbeResult {
+        private final String url;
+        private int statusCode = -1;
+        private String contentType;
+        private String finalUrl;
+        private String preview;
+        private String failure;
+
+        private ProbeResult(String url) {
+            this.url = url;
+        }
     }
 }
