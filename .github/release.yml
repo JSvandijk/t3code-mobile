@@ -1,0 +1,27 @@
+changelog:
+  categories:
+    - title: Highlights
+      labels:
+        - release:highlight
+    - title: Android App
+      labels:
+        - android
+    - title: PWA Proxy
+      labels:
+        - proxy
+    - title: Security
+      labels:
+        - security
+    - title: Documentation
+      labels:
+        - docs
+    - title: Community
+      labels:
+        - community
+    - title: Maintenance
+      labels:
+        - chore
+        - dependencies
+  exclude:
+    labels:
+      - skip-changelog

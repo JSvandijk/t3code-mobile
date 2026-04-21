@@ -6,3 +6,8 @@ apk/build/
 *.aab
 *.keystore
 .env
+/emulator-screen.png
+/emulator-screen-clean.png
+/t3-after-connect.png
+/t3-after-connect.xml
+/t3-ui.xml

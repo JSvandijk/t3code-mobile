@@ -1,0 +1,77 @@
+name: Bug report
+description: Report a reproducible problem in the Android app, proxy, or docs.
+title: "[Bug] "
+labels: ["bug", "triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for reporting a bug. Please fill in the details below so the issue can be reproduced quickly.
+  - type: textarea
+    id: summary
+    attributes:
+      label: Summary
+      description: What went wrong?
+      placeholder: The app connects, but the image upload button never appears after switching chats.
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      description: List the exact steps that trigger the issue.
+      placeholder: |
+        1. Open the app
+        2. Connect to http://your-host:3773
+        3. Pair successfully
+        4. Open a chat and tap ...
+    validations:
+      required: true
+  - type: input
+    id: device
+    attributes:
+      label: Device model
+      placeholder: Pixel 8
+    validations:
+      required: true
+  - type: input
+    id: android_version
+    attributes:
+      label: Android version
+      placeholder: Android 15
+    validations:
+      required: true
+  - type: dropdown
+    id: connection_mode
+    attributes:
+      label: Connection mode
+      options:
+        - Tailscale
+        - Trusted local network
+        - HTTPS proxy / PWA
+        - Other
+    validations:
+      required: true
+  - type: input
+    id: t3_version
+    attributes:
+      label: T3 Code version
+      description: If known.
+      placeholder: 0.0.x or commit hash
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual behavior
+    validations:
+      required: true
+  - type: textarea
+    id: extra
+    attributes:
+      label: Extra context
+      description: Add screenshots, logs, or anything else useful. Do not include tokens, private IPs, or certificates.

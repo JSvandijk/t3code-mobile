@@ -1,57 +1,59 @@
-# t3code-mobile
+# T3 Code Mobile
 
-Unofficial Android companion and optional HTTPS PWA proxy for [T3 Code](https://github.com/pingdotgg/t3code).
+[![CI](https://github.com/JSvandijk/t3code-mobile/actions/workflows/ci.yml/badge.svg)](https://github.com/JSvandijk/t3code-mobile/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/badge/license-MIT-0f172a.svg)](LICENSE)
+[![Platform: Android](https://img.shields.io/badge/platform-Android-6C63FF.svg)](#installation)
+[![Network: Tailscale-friendly](https://img.shields.io/badge/network-Tailscale--friendly-57d6c4.svg)](INSTALLATION-GUIDE.md)
 
-This project wraps a local T3 Code desktop instance in a lightweight mobile experience. It is focused on one job: making your own T3 Code session usable from an Android phone over Tailscale or a trusted local network, with a persistent photo upload shortcut inside the chat composer.
+An unofficial Android companion app and optional HTTPS/PWA proxy for [T3 Code](https://github.com/pingdotgg/t3code).
 
-## What This Repo Includes
+`t3code-mobile` is built for one specific job: make your own T3 Code session usable from your phone with the least possible setup friction. It wraps a local T3 Code desktop instance in a fullscreen Android WebView, remembers the server URL, and keeps an inline photo upload shortcut available inside the chat composer.
 
-- A native Android WebView wrapper for T3 Code
-- A persistent image upload button injected into the composer UI
-- Saved server URL so pairing is a one-time setup
-- An optional HTTPS proxy + PWA layer for browser-based install flows
-- Simple Windows build scripts for generating the APK without Gradle
+![T3 Code Mobile connect screen](docs/images/connect-screen.png)
 
-## Why This Exists
+## Why This Project Exists
 
-The official `pingdotgg/t3code` project is the upstream inspiration and the real product. This repository intentionally stays much smaller and more opinionated:
+The upstream T3 Code project is the real product. This repository is intentionally narrower:
 
-- It is mobile-first
-- It is designed around personal/self-hosted access
-- It assumes you already run T3 Code on your main machine
-- It prioritizes quick phone access over a full remote agent management platform
+- It is mobile-first and self-hosted.
+- It assumes you already run T3 Code on your main machine.
+- It optimizes for quick phone access over Tailscale or a trusted LAN.
+- It stays lightweight instead of becoming a broader remote-agent platform.
 
-## Core Features
+If that is the exact problem you have, this repo is deliberately small enough to understand, modify, and improve.
 
-- Fullscreen Android app with no browser chrome
-- Inline photo upload shortcut placed next to the existing composer controls
-- MutationObserver-based reinjection so the button survives chat switches
-- Tailscale-friendly connection flow
-- Remembered base URL for fast reconnects
-- Optional PWA proxy for users who want an installable browser version
+## What You Get
+
+- Native Android WebView wrapper with no browser chrome
+- One-time base URL setup with reconnect support
+- Persistent inline image upload button next to the composer controls
+- MutationObserver-based reinjection so the upload button survives SPA navigation
+- Optional HTTPS reverse proxy that adds a manifest, service worker, and installable PWA behavior
+- Windows-friendly APK build flow without needing a full Gradle project workflow
+
+## Quick Start
+
+1. Install Tailscale on your computer and Android phone.
+2. Open T3 Code on your computer.
+3. In T3 Code, go to `Settings` -> `Connections` -> `Create Link`.
+4. Install the APK on Android.
+5. Enter your base URL, for example `http://your-t3-host:3773`.
+6. Complete the standard pairing flow using the token from the desktop app.
+
+Detailed instructions live in [INSTALLATION-GUIDE.md](INSTALLATION-GUIDE.md).
 
 ## Project Layout
 
-- `apk/`: Android app source and launcher icons
-- `server.js`: optional HTTPS reverse proxy that injects PWA metadata
-- `manifest.json` and `sw.js`: installable PWA files for the proxy mode
-- `build-apk.bat`: main Windows build script
-- `generate-icons.js`: regenerates the public and Android icon assets
+- `apk/`: Android app source
+- `server.js`: optional HTTPS reverse proxy for PWA mode
+- `manifest.json` and `sw.js`: installable PWA assets
+- `build-apk.bat`: Windows APK build script
+- `generate-icons.js`: icon generation helper
+- `docs/`: comparison notes, publishing checklist, and images
 
-## Installation
+## Build And Run
 
-Use the full guide in [INSTALLATION-GUIDE.md](INSTALLATION-GUIDE.md).
-
-Quick path:
-
-1. Install Tailscale on your computer and Android phone.
-2. Install and open T3 Code on your computer.
-3. In T3 Code, open `Settings` -> `Connections` -> `Create Link`.
-4. Install the APK on Android.
-5. Enter your base URL such as `http://your-t3-host:3773`.
-6. Complete the pairing flow with the token from the desktop app.
-
-## Building The APK
+### Build The APK
 
 Requirements:
 
@@ -60,43 +62,65 @@ Requirements:
 - Android platform `android-35`
 - JDK 11+
 
-Run:
-
 ```bat
 build-apk.bat
 ```
 
-The script builds `apk/build/output/T3Code.apk` and copies it to the repo root as `T3Code.apk`.
+This builds `apk/build/output/T3Code.apk` and copies it to the repo root as `T3Code.apk`.
 
-## Running The Optional PWA Proxy
+### Run The Optional PWA Proxy
 
-The proxy mode is useful if you want a browser-installable version instead of the native APK.
+Use this mode if you want an installable browser version instead of the native APK.
 
-1. Create or supply `key.pem` and `cert.pem` in the repo root.
-2. Copy `.env.example` values into your environment if needed.
-3. Install dependencies with `npm install`.
-4. Start the proxy with `npm start`.
-5. Open the HTTPS URL from your phone and install it as a PWA.
+```bash
+npm install
+npm start
+```
+
+Set the environment variables from [.env.example](.env.example) if you need custom paths or ports. The proxy expects valid TLS files via `SSL_KEY_PATH` and `SSL_CERT_PATH`.
 
 ## How It Works
 
-- Android loads T3 Code inside a fullscreen WebView
-- After each page load, JavaScript injects a photo button into the composer footer
-- A hidden file input is recreated when needed during SPA navigation
-- Selected images are pasted into T3 Code through a `ClipboardEvent`
-- The optional proxy injects a web manifest, service worker registration, and mobile meta tags into the upstream HTML
+- The Android app opens your T3 Code instance in a fullscreen WebView.
+- After each page load, the app injects a custom image button into the composer footer.
+- A hidden file input is recreated when needed during SPA navigation.
+- Selected images are passed into T3 Code through a `ClipboardEvent` paste flow.
+- The optional proxy injects PWA metadata and service worker registration into the upstream HTML.
 
-## Comparison And Positioning
+## Contributing
 
-This repo is not trying to compete with broader remote-agent projects such as Yep Anywhere, AgentOS, or CloudCLI UI. It is a narrower companion app for T3 Code users who want the smallest possible path from desktop to phone.
+If you want to help this become a stronger community project, start here:
 
-See [docs/COMPARISON.md](docs/COMPARISON.md) for a short comparison against the upstream T3 Code repo and related mobile-first projects.
+- Read [CONTRIBUTING.md](CONTRIBUTING.md)
+- Check [ROADMAP.md](ROADMAP.md)
+- Look for issues labeled `good first issue` or `help wanted`
+- Use the issue forms for bug reports and feature proposals
 
-## Inspiration And Credit
+High-value contribution areas right now:
 
-- Upstream inspiration: [pingdotgg/t3code](https://github.com/pingdotgg/t3code)
-- This repo builds around the T3 Code desktop pairing flow and mobile access pattern
-- Related projects are listed in [docs/COMPARISON.md](docs/COMPARISON.md)
+- connection diagnostics
+- safer SSL and network handling
+- more resilient composer button injection
+- release automation
+- better onboarding docs and screenshots
+
+## Community And Support
+
+- Support guide: [SUPPORT.md](SUPPORT.md)
+- Security policy: [SECURITY.md](SECURITY.md)
+- Code of conduct: [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md)
+- Project comparison: [docs/COMPARISON.md](docs/COMPARISON.md)
+- Launch checklist: [docs/PUBLISHING-CHECKLIST.md](docs/PUBLISHING-CHECKLIST.md)
+
+## Status
+
+This repo is public and usable today, but still early. The current priority is reliability, better onboarding, and making it easy for outside contributors to help without having to reverse-engineer the codebase.
+
+## Positioning
+
+This repo is not trying to compete with broader remote-agent projects. It is a narrower companion app for T3 Code users who want the smallest practical path from desktop to phone.
+
+See [docs/COMPARISON.md](docs/COMPARISON.md) for a short comparison against upstream T3 Code and related mobile-first projects.
 
 ## Disclaimer
 

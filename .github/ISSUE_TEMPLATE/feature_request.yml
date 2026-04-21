@@ -1,0 +1,34 @@
+name: Feature request
+description: Suggest a focused improvement that fits the project's scope.
+title: "[Feature] "
+labels: ["enhancement", "triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Please keep feature ideas practical and aligned with the repo's scope: lightweight mobile access for self-hosted T3 Code.
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem or use case
+      description: What pain point would this solve?
+      placeholder: Re-entering the server URL requires clearing app data, which makes reconnecting awkward.
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed change
+      description: Describe the smallest useful version of the idea.
+    validations:
+      required: true
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+      description: What do you do today instead?
+  - type: textarea
+    id: extra
+    attributes:
+      label: Extra context
+      description: Mockups, screenshots, or references are welcome.

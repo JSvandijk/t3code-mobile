@@ -7,14 +7,20 @@
     "start": "node server.js",
     "build:apk": "build-apk.bat",
     "generate:icons": "node generate-icons.js",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "check:js": "node --check server.js && node --check generate-icons.js",
+    "check:manifest": "node -e \"JSON.parse(require('fs').readFileSync('manifest.json', 'utf8')); console.log('manifest.json OK')\"",
+    "test": "npm run check:js && npm run check:manifest"
   },
   "keywords": [
     "t3-code",
     "android",
+    "android-app",
+    "self-hosted",
+    "remote-access",
     "webview",
     "tailscale",
-    "pwa"
+    "pwa",
+    "pwa-proxy"
   ],
   "author": "JSvandijk",
   "license": "MIT",
