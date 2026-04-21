@@ -2,6 +2,7 @@ const fs = require('fs');
 const http = require('http');
 const https = require('https');
 const path = require('path');
+const selfsigned = require('selfsigned');
 
 const repoPath = (targetPath) => path.resolve(__dirname, targetPath);
 const harnessHtml = fs.readFileSync(repoPath('tmp-webview-harness/index.html'), 'utf8');
@@ -38,6 +39,31 @@ function readNumberArg(name, fallback) {
 
 function resolveMaybeRelative(targetPath) {
   return path.isAbsolute(targetPath) ? targetPath : repoPath(targetPath);
+}
+
+async function ensureHttpsMaterials(keyPath, certPath) {
+  if (fs.existsSync(keyPath) && fs.existsSync(certPath)) {
+    return {
+      key: fs.readFileSync(keyPath),
+      cert: fs.readFileSync(certPath),
+      source: 'files',
+    };
+  }
+
+  const generated = await selfsigned.generate([{
+    name: 'commonName',
+    value: '10.0.2.2',
+  }], {
+    algorithm: 'sha256',
+    days: 2,
+    keySize: 2048,
+  });
+
+  return {
+    key: Buffer.from(generated.private, 'utf8'),
+    cert: Buffer.from(generated.cert, 'utf8'),
+    source: 'generated',
+  };
 }
 
 const mode = readArg('mode', process.env.HARNESS_MODE || 'http');
@@ -90,43 +116,62 @@ function createRequestHandler(currentMode) {
   };
 }
 
-function createServer(currentMode) {
+async function createServer(currentMode) {
   if (currentMode === 'https-bad-cert') {
     const keyPath = resolveMaybeRelative(readArg('ssl-key', process.env.SSL_KEY_PATH || './key.pem'));
     const certPath = resolveMaybeRelative(readArg('ssl-cert', process.env.SSL_CERT_PATH || './cert.pem'));
+    const materials = await ensureHttpsMaterials(keyPath, certPath);
 
     return https.createServer({
-      key: fs.readFileSync(keyPath),
-      cert: fs.readFileSync(certPath),
+      key: materials.key,
+      cert: materials.cert,
     }, createRequestHandler(currentMode));
   }
 
   return http.createServer(createRequestHandler(currentMode));
 }
 
-const server = createServer(mode);
 const protocol = defaults[mode].protocol;
 const localUrl = `${protocol}://127.0.0.1:${port}/`;
 const emulatorUrl = `${protocol}://10.0.2.2:${port}/`;
+const certSource = mode === 'https-bad-cert'
+  ? (() => {
+      const keyPath = resolveMaybeRelative(readArg('ssl-key', process.env.SSL_KEY_PATH || './key.pem'));
+      const certPath = resolveMaybeRelative(readArg('ssl-cert', process.env.SSL_CERT_PATH || './cert.pem'));
+      return fs.existsSync(keyPath) && fs.existsSync(certPath) ? 'local files' : 'generated self-signed cert';
+    })()
+  : null;
 
-server.listen(port, host, () => {
-  console.log('');
-  console.log('  ==========================================');
-  console.log('  T3 Code Mobile WebView Harness');
-  console.log('  ==========================================');
-  console.log(`  Mode:         ${mode}`);
-  console.log(`  Listen host:  ${host}`);
-  console.log(`  Local URL:    ${localUrl}`);
-  console.log(`  Emulator URL: ${emulatorUrl}`);
-  if (mode === 'redirect') {
-    console.log(`  Redirect to:  ${redirectTarget}`);
-  }
-  console.log('  Status URL:   /status');
-  console.log('  ==========================================');
-  console.log('');
-});
+async function main() {
+  const server = await createServer(mode);
 
-server.on('error', (error) => {
+  server.listen(port, host, () => {
+    console.log('');
+    console.log('  ==========================================');
+    console.log('  T3 Code Mobile WebView Harness');
+    console.log('  ==========================================');
+    console.log(`  Mode:         ${mode}`);
+    console.log(`  Listen host:  ${host}`);
+    console.log(`  Local URL:    ${localUrl}`);
+    console.log(`  Emulator URL: ${emulatorUrl}`);
+    if (certSource) {
+      console.log(`  TLS source:   ${certSource}`);
+    }
+    if (mode === 'redirect') {
+      console.log(`  Redirect to:  ${redirectTarget}`);
+    }
+    console.log('  Status URL:   /status');
+    console.log('  ==========================================');
+    console.log('');
+  });
+
+  server.on('error', (error) => {
+    console.error(error.stack || error.message);
+    process.exit(1);
+  });
+}
+
+main().catch((error) => {
   console.error(error.stack || error.message);
   process.exit(1);
 });

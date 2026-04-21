@@ -59,6 +59,7 @@ If another T3 user or contributor opens this repo, they should be able to see bo
 - Resilient upload UX: the photo button is restored after upstream SPA transitions rather than relying on a one-shot DOM injection.
 - Testable proxy mode: the optional HTTPS proxy exposes `GET /__t3mobile/health` and has a smoke test for HTML injection and assets.
 - Contributor-ready harness: `npm run harness:http`, `harness:https-bad-cert`, and `harness:redirect` make Android WebView behavior reproducible.
+- CI-safe proxy smoke test: the proxy test can generate temporary self-signed certificates when local TLS files are absent.
 - Upstream-friendly scope: the repo stays narrow enough to complement T3 Code instead of drifting into a general remote-agent product.
 
 ## Quick Start

@@ -1,8 +1,43 @@
 const http = require('http');
 const https = require('https');
 const { spawn } = require('child_process');
+const fs = require('fs');
 const net = require('net');
+const os = require('os');
 const path = require('path');
+const selfsigned = require('selfsigned');
+
+async function ensureTestCertificates() {
+  const keyPath = path.join(__dirname, 'key.pem');
+  const certPath = path.join(__dirname, 'cert.pem');
+
+  if (fs.existsSync(keyPath) && fs.existsSync(certPath)) {
+    return { keyPath, certPath, cleanup: () => {} };
+  }
+
+  const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), 't3code-mobile-cert-'));
+  const generated = await selfsigned.generate([{
+    name: 'commonName',
+    value: '127.0.0.1',
+  }], {
+    algorithm: 'sha256',
+    days: 2,
+    keySize: 2048,
+  });
+
+  const generatedKeyPath = path.join(tempDir, 'key.pem');
+  const generatedCertPath = path.join(tempDir, 'cert.pem');
+  fs.writeFileSync(generatedKeyPath, generated.private, 'utf8');
+  fs.writeFileSync(generatedCertPath, generated.cert, 'utf8');
+
+  return {
+    keyPath: generatedKeyPath,
+    certPath: generatedCertPath,
+    cleanup: () => {
+      fs.rmSync(tempDir, { recursive: true, force: true });
+    },
+  };
+}
 
 async function getFreePort() {
   return new Promise((resolve, reject) => {
@@ -100,6 +135,7 @@ async function main() {
   const harnessPort = await getFreePort();
   const proxyPort = await getFreePort();
   const harnessServer = await startHarnessServer(harnessPort);
+  const testCertificates = await ensureTestCertificates();
 
   const proxyProcess = spawn(process.execPath, ['server.js'], {
     cwd: __dirname,
@@ -108,8 +144,8 @@ async function main() {
       HTTPS_PORT: String(proxyPort),
       T3_TARGET: `http://127.0.0.1:${harnessPort}`,
       PUBLIC_URL: `https://127.0.0.1:${proxyPort}`,
-      SSL_KEY_PATH: path.join(__dirname, 'key.pem'),
-      SSL_CERT_PATH: path.join(__dirname, 'cert.pem'),
+      SSL_KEY_PATH: testCertificates.keyPath,
+      SSL_CERT_PATH: testCertificates.certPath,
     },
     stdio: ['ignore', 'pipe', 'pipe'],
   });
@@ -170,6 +206,7 @@ async function main() {
   } finally {
     harnessServer.close();
     proxyProcess.kill();
+    testCertificates.cleanup();
   }
 
   if (proxyProcess.exitCode && proxyProcess.exitCode !== 0) {

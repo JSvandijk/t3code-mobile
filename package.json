@@ -40,5 +40,8 @@
   "homepage": "https://github.com/JSvandijk/t3code-mobile#readme",
   "dependencies": {
     "http-proxy": "^1.18.1"
+  },
+  "devDependencies": {
+    "selfsigned": "^5.5.0"
   }
 }
