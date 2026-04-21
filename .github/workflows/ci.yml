@@ -45,13 +45,13 @@ jobs:
         uses: actions/checkout@v6
 
       - name: Set up Java
-        uses: actions/setup-java@v4
+        uses: actions/setup-java@v5
         with:
           distribution: temurin
           java-version: '17'
 
       - name: Set up Android SDK
-        uses: android-actions/setup-android@v3
+        uses: android-actions/setup-android@v4
 
       - name: Install Android platforms and build tools
         shell: pwsh
@@ -73,7 +73,7 @@ jobs:
           "$hash  $($apk.Name)" | Set-Content "$($apk.FullName).sha256"
 
       - name: Upload APK artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: t3code-apk-dev
           if-no-files-found: error
@@ -81,3 +81,4 @@ jobs:
           path: |
             apk/build/output/T3Code-v*.apk
             apk/build/output/T3Code-v*.apk.sha256
+
