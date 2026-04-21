@@ -1,0 +1,96 @@
+name: Runtime evidence
+description: Record release-quality Android runtime evidence for a specific tag or commit.
+title: "Release evidence: "
+labels:
+  - chore
+  - docs
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Use this issue to tie Android runtime proof to an exact release tag or commit.
+
+  - type: input
+    id: release_tag
+    attributes:
+      label: Release tag
+      description: Example: v1.1.0
+      placeholder: v1.1.0
+    validations:
+      required: true
+
+  - type: input
+    id: commit_sha
+    attributes:
+      label: Commit SHA
+      description: Exact commit that was tested
+      placeholder: 7b7680807bd97f06802fd98783096dd37223b673
+    validations:
+      required: true
+
+  - type: textarea
+    id: environment
+    attributes:
+      label: Test environment
+      description: Include device or AVD, Android version, WebView version, app version, T3 Code version, and network path.
+      placeholder: |
+        Device: Pixel 8
+        Android: 15
+        WebView: 145.0.x
+        App: 1.1.0
+        T3 Code: ...
+        Network: Tailscale
+    validations:
+      required: true
+
+  - type: checkboxes
+    id: runtime_flows
+    attributes:
+      label: Runtime flows
+      options:
+        - label: First-run connect screen captured
+        - label: Full pairing-style link accepted
+        - label: Base URL normalization confirmed
+        - label: Reconnect with saved server confirmed
+        - label: Diagnostics path confirmed
+        - label: Invalid HTTPS blocking confirmed
+        - label: Composer upload flow confirmed
+
+  - type: textarea
+    id: artifacts
+    attributes:
+      label: Evidence links
+      description: Link screenshots, recordings, logs, or repo evidence folders.
+      placeholder: |
+        - docs/evidence/v1.1.0-emulator/README.md
+        - release recording
+        - CI run
+    validations:
+      required: true
+
+  - type: textarea
+    id: automated
+    attributes:
+      label: Automated verification
+      description: Paste or link the `npm test` result and workflow runs.
+      placeholder: |
+        npm test: pass
+        CI run: ...
+    validations:
+      required: true
+
+  - type: textarea
+    id: gaps
+    attributes:
+      label: Known gaps
+      description: List anything still unverified or intentionally not re-run.
+      placeholder: None
+
+  - type: checkboxes
+    id: ship_call
+    attributes:
+      label: Release call
+      options:
+        - label: Ready to ship
+        - label: Ready to ship with documented limitations
+        - label: Not ready to ship

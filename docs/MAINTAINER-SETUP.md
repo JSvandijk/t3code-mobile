@@ -31,6 +31,8 @@ Use this checklist to keep the public repository configuration aligned with the 
 
 ## Release Hygiene
 
+- Keep `.github/workflows/ci.yml` and `.github/workflows/release.yml` green before tagging
+- Require a reviewer to confirm runtime evidence is attached or linked before merging release-sensitive changes
 - Create a Git tag for each public release
 - Configure these GitHub Actions secrets for release signing:
   - `APK_KEYSTORE_BASE64`
@@ -39,8 +41,10 @@ Use this checklist to keep the public repository configuration aligned with the 
   - `APK_KEY_PASSWORD`
 - Push a tag that matches `package.json`, for example `v1.1.0`
 - Let `.github/workflows/release.yml` publish the versioned APK and checksum
-- Include tested Android version and device notes
-- Keep [docs/SECURITY-AUDIT.md](SECURITY-AUDIT.md) current when security-sensitive behavior changes
+- Include tested Android version, Android System WebView version, and device notes
+- Keep [docs/RUNTIME-VERIFICATION.md](docs/RUNTIME-VERIFICATION.md) aligned with the current evidence bar
+- Keep [docs/RELEASE-RUNBOOK.md](docs/RELEASE-RUNBOOK.md) aligned with the actual release flow
+- Keep [docs/SECURITY-AUDIT.md](docs/SECURITY-AUDIT.md) current when security-sensitive behavior changes
 
 ## Community Signals
 

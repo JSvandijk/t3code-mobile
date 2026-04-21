@@ -10,24 +10,84 @@ const repoPath = (targetPath) => path.resolve(__dirname, targetPath);
 const fromEnvOrDefault = (name, fallback) => process.env[name] || fallback;
 const resolveMaybeRelative = (targetPath) =>
   path.isAbsolute(targetPath) ? targetPath : repoPath(targetPath);
+const HEALTH_PATH = '/__t3mobile/health';
+const HEALTH_PROBE_TIMEOUT_MS = 5000;
 
-const HTTPS_PORT = Number(fromEnvOrDefault('HTTPS_PORT', '3780'));
-const T3_TARGET = fromEnvOrDefault('T3_TARGET', 'http://127.0.0.1:3773');
-const PUBLIC_URL = fromEnvOrDefault('PUBLIC_URL', `https://localhost:${HTTPS_PORT}`);
+function failFast(message) {
+  console.error(`[t3code-mobile] ${message}`);
+  process.exit(1);
+}
+
+function parseIntegerEnv(name, fallback, minimum) {
+  const rawValue = fromEnvOrDefault(name, String(fallback));
+  const parsed = Number.parseInt(rawValue, 10);
+  if (!Number.isInteger(parsed) || parsed < minimum) {
+    failFast(`${name} must be an integer >= ${minimum}. Received: ${rawValue}`);
+  }
+  return parsed;
+}
+
+function parseUrlEnv(name, fallback, allowedProtocols) {
+  const rawValue = fromEnvOrDefault(name, fallback);
+  let parsed;
+
+  try {
+    parsed = new URL(rawValue);
+  } catch (error) {
+    failFast(`${name} must be a valid absolute URL. Received: ${rawValue}`);
+  }
+
+  if (!allowedProtocols.includes(parsed.protocol)) {
+    failFast(`${name} must use one of: ${allowedProtocols.join(', ')}. Received: ${parsed.protocol}`);
+  }
+
+  return parsed;
+}
+
+function loadTlsCredentials(keyPath, certPath) {
+  try {
+    return {
+      key: fs.readFileSync(keyPath),
+      cert: fs.readFileSync(certPath),
+    };
+  } catch (error) {
+    if (error.code === 'ENOENT') {
+      failFast(
+        `Missing TLS material. Expected key at ${keyPath} and certificate at ${certPath}. ` +
+        'Generate local development certificates or point SSL_KEY_PATH and SSL_CERT_PATH at real files.',
+      );
+    }
+
+    failFast(`Unable to load TLS material: ${error.message}`);
+  }
+}
+
+const HTTPS_PORT = parseIntegerEnv('HTTPS_PORT', 3780, 1);
+const T3_TARGET_URL = parseUrlEnv('T3_TARGET', 'http://127.0.0.1:3773', ['http:', 'https:']);
+const T3_TARGET = T3_TARGET_URL.toString();
+const PUBLIC_URL = parseUrlEnv('PUBLIC_URL', `https://localhost:${HTTPS_PORT}`, ['https:']).toString();
 const SSL_KEY_PATH = resolveMaybeRelative(fromEnvOrDefault('SSL_KEY_PATH', './key.pem'));
 const SSL_CERT_PATH = resolveMaybeRelative(fromEnvOrDefault('SSL_CERT_PATH', './cert.pem'));
-const HEALTH_PATH = '/__t3mobile/health';
-const UPSTREAM_TIMEOUT_MS = Number(fromEnvOrDefault('UPSTREAM_TIMEOUT_MS', '15000'));
-const upstreamUrl = new URL(T3_TARGET);
+const UPSTREAM_TIMEOUT_MS = parseIntegerEnv('UPSTREAM_TIMEOUT_MS', 15000, 100);
+const upstreamUrl = T3_TARGET_URL;
 const upstreamAgent = upstreamUrl.protocol === 'https:'
   ? new https.Agent({ keepAlive: true })
   : new http.Agent({ keepAlive: true });
 const healthHttpAgent = new http.Agent({ keepAlive: true });
 const healthHttpsAgent = new https.Agent({ keepAlive: true });
+const sslOptions = loadTlsCredentials(SSL_KEY_PATH, SSL_CERT_PATH);
+const baseResponseHeaders = {
+  'X-T3Mobile-Proxy': pkg.version,
+  'X-Content-Type-Options': 'nosniff',
+  'Referrer-Policy': 'no-referrer',
+  'X-Robots-Tag': 'noindex, nofollow',
+};
 
-const sslOptions = {
-  key: fs.readFileSync(SSL_KEY_PATH),
-  cert: fs.readFileSync(SSL_CERT_PATH),
+const writeHeaders = (res, statusCode, headers) => {
+  res.writeHead(statusCode, {
+    ...baseResponseHeaders,
+    ...headers,
+  });
 };
 
 const staticFiles = {
@@ -82,15 +142,20 @@ const proxy = httpProxy.createProxyServer({
   ws: true,
   selfHandleResponse: true,
   agent: upstreamAgent,
+  changeOrigin: true,
+  xfwd: true,
+  proxyTimeout: UPSTREAM_TIMEOUT_MS,
+  timeout: UPSTREAM_TIMEOUT_MS,
 });
 
 const requestTarget = (targetUrl) => new Promise((resolve) => {
   const url = new URL(targetUrl);
   const client = url.protocol === 'https:' ? https : http;
   const startedAt = Date.now();
+  let previewBytes = 0;
   const request = client.request(url, {
     method: 'GET',
-    timeout: Math.min(UPSTREAM_TIMEOUT_MS, 5000),
+    timeout: Math.min(UPSTREAM_TIMEOUT_MS, HEALTH_PROBE_TIMEOUT_MS),
     agent: url.protocol === 'https:' ? healthHttpsAgent : healthHttpAgent,
     headers: {
       Accept: 'text/html,application/json;q=0.9,*/*;q=0.1',
@@ -99,8 +164,11 @@ const requestTarget = (targetUrl) => new Promise((resolve) => {
   }, (response) => {
     const chunks = [];
     response.on('data', (chunk) => {
-      if (Buffer.concat(chunks).length < 512) {
-        chunks.push(chunk);
+      if (previewBytes < 512) {
+        const remaining = 512 - previewBytes;
+        const chunkSlice = chunk.subarray(0, remaining);
+        chunks.push(chunkSlice);
+        previewBytes += chunkSlice.length;
       }
     });
     response.on('end', () => {
@@ -111,7 +179,7 @@ const requestTarget = (targetUrl) => new Promise((resolve) => {
         statusCode: response.statusCode,
         contentType: response.headers['content-type'] || null,
         preview,
-        timeoutMs: Math.min(UPSTREAM_TIMEOUT_MS, 5000),
+        timeoutMs: Math.min(UPSTREAM_TIMEOUT_MS, HEALTH_PROBE_TIMEOUT_MS),
       });
     });
   });
@@ -125,17 +193,16 @@ const requestTarget = (targetUrl) => new Promise((resolve) => {
       contentType: null,
       preview: '',
       error: error.message,
-      timeoutMs: Math.min(UPSTREAM_TIMEOUT_MS, 5000),
+      timeoutMs: Math.min(UPSTREAM_TIMEOUT_MS, HEALTH_PROBE_TIMEOUT_MS),
     });
   });
   request.end();
 });
 
 const sendJson = (res, statusCode, payload) => {
-  res.writeHead(statusCode, {
+  writeHeaders(res, statusCode, {
     'Content-Type': 'application/json; charset=utf-8',
     'Cache-Control': 'no-store, must-revalidate',
-    'X-T3Mobile-Proxy': pkg.version,
   });
   res.end(JSON.stringify(payload, null, 2));
 };
@@ -206,14 +273,17 @@ const sendProxyErrorResponse = (res, err) => {
     return;
   }
 
+  if (err && err.message) {
+    console.error(`[t3code-mobile] Proxy error: ${err.message}`);
+  }
+
   const statusCode = 502;
   const title = 'T3 Code is unavailable';
   const message = 'The proxy could not reach your upstream T3 Code session. Verify that T3 Code is still running, the target URL is correct, and your private network path is reachable.';
 
-  res.writeHead(statusCode, {
+  writeHeaders(res, statusCode, {
     'Content-Type': 'text/html; charset=utf-8',
     'Cache-Control': 'no-store, must-revalidate',
-    'X-T3Mobile-Proxy': pkg.version,
   });
   res.end(renderProxyErrorPage({ statusCode, title, message }));
 };
@@ -254,6 +324,10 @@ proxy.on('proxyRes', (proxyRes, req, res) => {
   delete headers['last-modified'];
   delete headers.expires;
   delete headers.age;
+  headers['x-content-type-options'] = 'nosniff';
+  headers['referrer-policy'] = 'no-referrer';
+  headers['x-robots-tag'] = 'noindex, nofollow';
+  headers['x-t3mobile-proxy'] = pkg.version;
 
   if (contentType.includes('text/html')) {
     const chunks = [];
@@ -270,12 +344,12 @@ proxy.on('proxyRes', (proxyRes, req, res) => {
       body = injectPwaMarkup(body);
       headers['cache-control'] = 'no-store, must-revalidate';
       headers.vary = 'Accept-Encoding';
-      res.writeHead(proxyRes.statusCode, headers);
+      writeHeaders(res, proxyRes.statusCode, headers);
       res.end(body);
     });
   } else {
     if (encoding) headers['content-encoding'] = encoding;
-    res.writeHead(proxyRes.statusCode, headers);
+    writeHeaders(res, proxyRes.statusCode, headers);
     proxyRes.pipe(res);
   }
 });
@@ -285,7 +359,9 @@ proxy.on('error', (err, req, res) => {
 });
 
 const handler = (req, res) => {
-  res.setHeader('X-T3Mobile-Proxy', pkg.version);
+  for (const [key, value] of Object.entries(baseResponseHeaders)) {
+    res.setHeader(key, value);
+  }
   const urlPath = req.url.split('?')[0];
   if (urlPath === HEALTH_PATH) {
     serveHealth(res).catch((error) => {
@@ -305,7 +381,7 @@ const handler = (req, res) => {
     const { file, type, cacheControl } = staticFiles[urlPath];
     try {
       const content = fs.readFileSync(path.join(__dirname, file));
-      res.writeHead(200, { 'Content-Type': type, 'Cache-Control': cacheControl });
+      writeHeaders(res, 200, { 'Content-Type': type, 'Cache-Control': cacheControl });
       res.end(content);
       return;
     } catch (e) { /* fall through */ }
@@ -314,10 +390,26 @@ const handler = (req, res) => {
 };
 
 const server = https.createServer(sslOptions, handler);
+server.requestTimeout = UPSTREAM_TIMEOUT_MS + 5000;
+server.headersTimeout = UPSTREAM_TIMEOUT_MS + 10000;
+server.keepAliveTimeout = 5000;
 
 server.on('upgrade', (req, socket, head) => {
   proxy.ws(req, socket, head);
 });
+
+const shutdown = (signal) => {
+  console.log(`[t3code-mobile] Received ${signal}. Shutting down proxy.`);
+  server.close(() => {
+    proxy.close();
+    process.exit(0);
+  });
+
+  setTimeout(() => process.exit(1), 5000).unref();
+};
+
+process.on('SIGINT', () => shutdown('SIGINT'));
+process.on('SIGTERM', () => shutdown('SIGTERM'));
 
 server.listen(HTTPS_PORT, '0.0.0.0', () => {
   console.log('');

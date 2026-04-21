@@ -31,4 +31,5 @@ Target response windows:
 - Treat this project as a companion for trusted networks, not as a hardened public internet gateway.
 - Avoid exposing the proxy directly to the public internet.
 - Use trusted certificates for HTTPS where possible.
+- Do not commit TLS keys, certificates, `.env` files, or signed build artifacts to the repository.
 - Review WebView and proxy settings carefully before broader deployment.

@@ -1,0 +1,20 @@
+Capture date: 2026-04-22T00:42:01.6602310+02:00
+Git commit: 7b7680807bd97f06802fd98783096dd37223b673
+AVD: Medium_Phone_API_36.1
+Device serials:
+List of devices attached
+emulator-5554	device
+
+
+Android release: 16
+Android SDK: 36
+Device model: sdk_gphone64_x86_64
+Manufacturer: Google
+
+WebView:
+  Current WebView package (name, version): (com.google.android.webview, 145.0.7632.79)
+    Valid package com.google.android.webview (versionName: 145.0.7632.79, versionCode: 763207908, targetSdkVersion: 36) is  installed/enabled for all users
+
+Installed app:
+    versionCode=10100 minSdk=24 targetSdk=35
+    versionName=1.1.0

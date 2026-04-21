@@ -13,6 +13,30 @@ function readJson(file) {
   return JSON.parse(fs.readFileSync(path.join(root, file), 'utf8'));
 }
 
+function listTrackedFiles() {
+  try {
+    return execFileSync('git', ['ls-files'], {
+      cwd: root,
+      encoding: 'utf8',
+      stdio: ['ignore', 'pipe', 'pipe'],
+    })
+      .split(/\r?\n/)
+      .map((value) => value.trim())
+      .filter(Boolean);
+  } catch (error) {
+    if (error.code === 'ENOENT') {
+      console.warn('git is not available; skipped tracked-file checks.');
+      return [];
+    }
+
+    if (typeof error.stdout === 'string' && error.stdout.trim()) {
+      fail(error.stdout.trim());
+    }
+
+    throw error;
+  }
+}
+
 function parsePngSize(file) {
   const buffer = fs.readFileSync(file);
   const pngSignature = '89504e470d0a1a0a';
@@ -59,28 +83,60 @@ function ensureSemver(version) {
   }
 }
 
-function ensureNoTrackedKeystores() {
-  try {
-    const output = execFileSync('git', ['ls-files', '--', '*.keystore', '*.jks'], {
-      cwd: root,
-      encoding: 'utf8',
-      stdio: ['ignore', 'pipe', 'pipe'],
-    }).trim();
+function ensureNoTrackedSensitiveFiles(trackedFiles) {
+  const matches = trackedFiles.filter((file) => {
+    const lower = file.toLowerCase();
+    return /\.(keystore|jks|p12|pem)$/i.test(lower)
+      || lower.endsWith('.env')
+      || lower.endsWith('.env.local')
+      || lower.endsWith('.env.production');
+  });
 
-    if (output) {
-      fail(`Tracked signing material is not allowed:\n${output}`);
-    }
-  } catch (error) {
-    if (error.code === 'ENOENT') {
-      console.warn('git is not available; skipped tracked keystore check.');
-      return;
+  if (matches.length > 0) {
+    fail(`Tracked secrets or signing material are not allowed:\n${matches.join('\n')}`);
+  }
+}
+
+function ensureNoTrackedGeneratedArtifacts(trackedFiles) {
+  const transientRootFiles = new Set([
+    'emulator-screen.png',
+    'emulator-screen-clean.png',
+    't3-after-connect.png',
+    't3-after-connect.xml',
+    't3-connect-pass.png',
+    't3-connect-pass.xml',
+    't3-harness-result.png',
+    't3-harness-result.xml',
+    't3-ui.xml',
+    't3-https-entry.xml',
+  ]);
+
+  const matches = trackedFiles.filter((file) => {
+    const normalized = file.replace(/\\/g, '/');
+    const base = path.basename(normalized).toLowerCase();
+    const isRootFile = !normalized.includes('/');
+
+    if (transientRootFiles.has(base)) {
+      return true;
     }
 
-    if (typeof error.stdout === 'string' && error.stdout.trim()) {
-      fail(error.stdout.trim());
+    if (isRootFile && (base.endsWith('.apk') || base.endsWith('.aab') || base.endsWith('.sha256'))) {
+      return true;
     }
 
-    throw error;
+    if (isRootFile && /^t3code-v\d+\.\d+\.\d+\.(apk|aab|sha256|zip)$/i.test(base)) {
+      return true;
+    }
+
+    if (isRootFile && /^t3code(\.apk|\.zip)$/i.test(base)) {
+      return true;
+    }
+
+    return false;
+  });
+
+  if (matches.length > 0) {
+    fail(`Tracked generated artifacts are not allowed in the repository root:\n${matches.join('\n')}`);
   }
 }
 
@@ -91,12 +147,32 @@ function ensureWorkflowExists() {
   }
 }
 
+function ensureRequiredDocsExist() {
+  const requiredDocs = [
+    'README.md',
+    'SECURITY.md',
+    'CONTRIBUTING.md',
+    'docs/WEBVIEW-HARNESS.md',
+    'docs/RUNTIME-VERIFICATION.md',
+    'docs/RELEASE-RUNBOOK.md',
+  ];
+
+  for (const file of requiredDocs) {
+    if (!fs.existsSync(path.join(root, file))) {
+      fail(`Missing required project document: ${file}`);
+    }
+  }
+}
+
 const pkg = readJson('package.json');
 const manifest = readJson('manifest.json');
+const trackedFiles = listTrackedFiles();
 
 ensureSemver(pkg.version);
 ensureManifestIcons(manifest);
-ensureNoTrackedKeystores();
+ensureNoTrackedSensitiveFiles(trackedFiles);
+ensureNoTrackedGeneratedArtifacts(trackedFiles);
 ensureWorkflowExists();
+ensureRequiredDocsExist();
 
 console.log(`release checks OK for version ${pkg.version}`);

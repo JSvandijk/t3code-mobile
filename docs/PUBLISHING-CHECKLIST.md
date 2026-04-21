@@ -25,17 +25,19 @@ Use this before creating a public release or making a broader push for stars, us
 
 ## Release Asset
 
+- Run `npm test` from a clean working tree and keep the output
 - Build a fresh APK from a clean working tree
 - Install it on a second Android device
 - Test first-run pairing
 - Test pasting a full pairing link and confirm only the base URL is retained
 - Test reconnect with the saved URL
 - Test the photo upload button in a real chat
-- Note the Android version, device model, and T3 Code version tested
+- Capture the evidence required by [RUNTIME-VERIFICATION.md](RUNTIME-VERIFICATION.md)
+- Note the Android version, Android System WebView version, device model, network path, and T3 Code version tested
 
 ## Optional PWA Mode
 
-- Verify `cert.pem` and `key.pem` are not committed
+- Verify no TLS keys, certificates, `.env` files, or build artifacts are committed
 - Verify the proxy works with your intended `PUBLIC_URL`
 - Test install flow in Chrome on Android
 
@@ -52,8 +54,11 @@ Use this before creating a public release or making a broader push for stars, us
 
 - Confirm the package version in `package.json` is final
 - Tag the exact release commit with the matching version, for example `v1.1.0`
+- Confirm [RELEASE-RUNBOOK.md](RELEASE-RUNBOOK.md) is still accurate for the current workflow
+- Open or update a runtime evidence record from [docs/evidence/RELEASE-EVIDENCE-TEMPLATE.md](evidence/RELEASE-EVIDENCE-TEMPLATE.md)
 - Let the release workflow publish `T3Code-v<version>.apk` and `T3Code-v<version>.apk.sha256`
 - Use GitHub's automatically generated release notes, then edit the intro paragraph by hand
 - Include a short tested-on note and any known limitations
+- Link to the runtime evidence issue, PR, or release note section that records the manual Android checks
 - Link to [SHOWCASE.md](SHOWCASE.md) if you want maintainers or contributors to evaluate the project quickly
 - Link to [COMPARISON.md](COMPARISON.md) so readers understand project scope immediately

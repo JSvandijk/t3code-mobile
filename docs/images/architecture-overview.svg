@@ -1,0 +1,77 @@
+<svg width="1200" height="720" viewBox="0 0 1200 720" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1200" y2="720" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#F5F7FB"/>
+      <stop offset="1" stop-color="#E7EEF8"/>
+    </linearGradient>
+    <linearGradient id="card" x1="0" y1="0" x2="1" y2="1">
+      <stop stop-color="#FFFFFF"/>
+      <stop offset="1" stop-color="#F7FAFF"/>
+    </linearGradient>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="10" stdDeviation="14" flood-color="#0F172A" flood-opacity="0.10"/>
+    </filter>
+    <marker id="arrow" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto">
+      <path d="M0 0L12 6L0 12V0Z" fill="#355C7D"/>
+    </marker>
+  </defs>
+
+  <rect width="1200" height="720" rx="28" fill="url(#bg)"/>
+
+  <text x="72" y="88" fill="#132238" font-family="Segoe UI, Arial, sans-serif" font-size="38" font-weight="700">
+    T3 Code Mobile Architecture
+  </text>
+  <text x="72" y="124" fill="#4A5A70" font-family="Segoe UI, Arial, sans-serif" font-size="20">
+    Narrow Android companion app, optional HTTPS proxy, and an evidence-backed release flow.
+  </text>
+
+  <g filter="url(#shadow)">
+    <rect x="70" y="180" width="290" height="410" rx="24" fill="url(#card)"/>
+    <text x="100" y="228" fill="#1B2B40" font-family="Segoe UI, Arial, sans-serif" font-size="28" font-weight="700">Android App</text>
+    <text x="100" y="262" fill="#55708E" font-family="Segoe UI, Arial, sans-serif" font-size="18">MainActivity.java</text>
+    <text x="100" y="320" fill="#203247" font-family="Segoe UI, Arial, sans-serif" font-size="20">• URL normalization</text>
+    <text x="100" y="360" fill="#203247" font-family="Segoe UI, Arial, sans-serif" font-size="20">• HTTP warning</text>
+    <text x="100" y="400" fill="#203247" font-family="Segoe UI, Arial, sans-serif" font-size="20">• Scoped WebView nav</text>
+    <text x="100" y="440" fill="#203247" font-family="Segoe UI, Arial, sans-serif" font-size="20">• Diagnostics + info</text>
+    <text x="100" y="480" fill="#203247" font-family="Segoe UI, Arial, sans-serif" font-size="20">• Upload button injection</text>
+    <text x="100" y="520" fill="#203247" font-family="Segoe UI, Arial, sans-serif" font-size="20">• Invalid TLS blocked</text>
+  </g>
+
+  <g filter="url(#shadow)">
+    <rect x="455" y="150" width="300" height="190" rx="24" fill="url(#card)"/>
+    <text x="485" y="198" fill="#1B2B40" font-family="Segoe UI, Arial, sans-serif" font-size="28" font-weight="700">T3 Code Session</text>
+    <text x="485" y="232" fill="#55708E" font-family="Segoe UI, Arial, sans-serif" font-size="18">Desktop app on trusted network</text>
+    <text x="485" y="286" fill="#203247" font-family="Segoe UI, Arial, sans-serif" font-size="20">• Pairing link source</text>
+    <text x="485" y="322" fill="#203247" font-family="Segoe UI, Arial, sans-serif" font-size="20">• Chat UI rendered in WebView</text>
+  </g>
+
+  <g filter="url(#shadow)">
+    <rect x="455" y="392" width="300" height="198" rx="24" fill="url(#card)"/>
+    <text x="485" y="440" fill="#1B2B40" font-family="Segoe UI, Arial, sans-serif" font-size="28" font-weight="700">Optional Proxy</text>
+    <text x="485" y="474" fill="#55708E" font-family="Segoe UI, Arial, sans-serif" font-size="18">server.js</text>
+    <text x="485" y="528" fill="#203247" font-family="Segoe UI, Arial, sans-serif" font-size="20">• HTTPS reverse proxy</text>
+    <text x="485" y="564" fill="#203247" font-family="Segoe UI, Arial, sans-serif" font-size="20">• PWA injection + health path</text>
+  </g>
+
+  <g filter="url(#shadow)">
+    <rect x="850" y="180" width="280" height="410" rx="24" fill="url(#card)"/>
+    <text x="880" y="228" fill="#1B2B40" font-family="Segoe UI, Arial, sans-serif" font-size="28" font-weight="700">Verification</text>
+    <text x="880" y="262" fill="#55708E" font-family="Segoe UI, Arial, sans-serif" font-size="18">Harness, smoke tests, CI, evidence</text>
+    <text x="880" y="320" fill="#203247" font-family="Segoe UI, Arial, sans-serif" font-size="20">• webview-harness.js</text>
+    <text x="880" y="360" fill="#203247" font-family="Segoe UI, Arial, sans-serif" font-size="20">• smoke-proxy.js</text>
+    <text x="880" y="400" fill="#203247" font-family="Segoe UI, Arial, sans-serif" font-size="20">• check-release.js</text>
+    <text x="880" y="440" fill="#203247" font-family="Segoe UI, Arial, sans-serif" font-size="20">• CI / release workflows</text>
+    <text x="880" y="480" fill="#203247" font-family="Segoe UI, Arial, sans-serif" font-size="20">• Runtime evidence folders</text>
+    <text x="880" y="520" fill="#203247" font-family="Segoe UI, Arial, sans-serif" font-size="20">• Release evidence template</text>
+  </g>
+
+  <path d="M360 295H435" stroke="#355C7D" stroke-width="8" stroke-linecap="round" marker-end="url(#arrow)"/>
+  <path d="M755 250H830" stroke="#355C7D" stroke-width="8" stroke-linecap="round" marker-end="url(#arrow)"/>
+  <path d="M755 490H830" stroke="#355C7D" stroke-width="8" stroke-linecap="round" marker-end="url(#arrow)"/>
+  <path d="M605 340V375" stroke="#355C7D" stroke-width="8" stroke-linecap="round" marker-end="url(#arrow)"/>
+
+  <text x="374" y="278" fill="#355C7D" font-family="Segoe UI, Arial, sans-serif" font-size="16" font-weight="600">loads / scopes</text>
+  <text x="764" y="232" fill="#355C7D" font-family="Segoe UI, Arial, sans-serif" font-size="16" font-weight="600">runtime proof</text>
+  <text x="764" y="472" fill="#355C7D" font-family="Segoe UI, Arial, sans-serif" font-size="16" font-weight="600">proxy proof</text>
+  <text x="620" y="366" fill="#355C7D" font-family="Segoe UI, Arial, sans-serif" font-size="16" font-weight="600">optional</text>
+</svg>

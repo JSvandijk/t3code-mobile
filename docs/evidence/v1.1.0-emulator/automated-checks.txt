@@ -1,0 +1,23 @@
+
+> t3code-mobile@1.1.0 test
+> npm run check:js && npm run check:manifest && npm run check:repo && npm run test:proxy
+
+
+> t3code-mobile@1.1.0 check:js
+> node --check server.js && node --check generate-icons.js && node --check sw.js && node --check check-release.js && node --check smoke-proxy.js && node --check webview-harness.js
+
+
+> t3code-mobile@1.1.0 check:manifest
+> node -e "JSON.parse(require('fs').readFileSync('manifest.json', 'utf8')); console.log('manifest.json OK')"
+
+manifest.json OK
+
+> t3code-mobile@1.1.0 check:repo
+> node check-release.js
+
+release checks OK for version 1.1.0
+
+> t3code-mobile@1.1.0 test:proxy
+> node smoke-proxy.js
+
+proxy smoke test OK

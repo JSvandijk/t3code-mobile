@@ -160,11 +160,24 @@ The proxy also exposes `GET /__t3mobile/health`, which returns JSON about the pr
 - Selected images are passed into T3 Code through a `ClipboardEvent` paste flow.
 - The optional proxy injects PWA metadata and service worker registration into the upstream HTML, keeps upstream connections alive for lighter reconnects, and exposes a lightweight health endpoint for smoke tests and troubleshooting.
 
+## Architecture
+
+![T3 Code Mobile architecture overview](docs/images/architecture-overview.svg)
+
+If you want the technical breakdown instead of the public pitch, read [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
+
 ## Proof And Assets
 
 - Public showcase notes: [docs/SHOWCASE.md](docs/SHOWCASE.md)
 - Screenshot and caption guide: [docs/SCREENSHOTS.md](docs/SCREENSHOTS.md)
+- Architecture overview: [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)
 - Local runtime harness: [docs/WEBVIEW-HARNESS.md](docs/WEBVIEW-HARNESS.md)
+- Runtime verification standard: [docs/RUNTIME-VERIFICATION.md](docs/RUNTIME-VERIFICATION.md)
+- Runtime evidence bundles: [docs/evidence/README.md](docs/evidence/README.md)
+- Release evidence template: [docs/evidence/RELEASE-EVIDENCE-TEMPLATE.md](docs/evidence/RELEASE-EVIDENCE-TEMPLATE.md)
+- Release runbook: [docs/RELEASE-RUNBOOK.md](docs/RELEASE-RUNBOOK.md)
+- Launch playbook: [docs/LAUNCH-PLAYBOOK.md](docs/LAUNCH-PLAYBOOK.md)
+- Starter issue ideas: [docs/STARTER-ISSUES.md](docs/STARTER-ISSUES.md)
 - Project comparison: [docs/COMPARISON.md](docs/COMPARISON.md)
 - Upstream-fit notes: [docs/UPSTREAM-FIT.md](docs/UPSTREAM-FIT.md)
 
@@ -204,6 +217,11 @@ High-value contribution areas right now:
 - Showcase notes: [docs/SHOWCASE.md](docs/SHOWCASE.md)
 - Screenshot guide: [docs/SCREENSHOTS.md](docs/SCREENSHOTS.md)
 - WebView harness: [docs/WEBVIEW-HARNESS.md](docs/WEBVIEW-HARNESS.md)
+- Runtime verification standard: [docs/RUNTIME-VERIFICATION.md](docs/RUNTIME-VERIFICATION.md)
+- Runtime evidence bundles: [docs/evidence/README.md](docs/evidence/README.md)
+- Release runbook: [docs/RELEASE-RUNBOOK.md](docs/RELEASE-RUNBOOK.md)
+- Launch playbook: [docs/LAUNCH-PLAYBOOK.md](docs/LAUNCH-PLAYBOOK.md)
+- Starter issue ideas: [docs/STARTER-ISSUES.md](docs/STARTER-ISSUES.md)
 - Project comparison: [docs/COMPARISON.md](docs/COMPARISON.md)
 - Upstream-fit notes: [docs/UPSTREAM-FIT.md](docs/UPSTREAM-FIT.md)
 - Launch checklist: [docs/PUBLISHING-CHECKLIST.md](docs/PUBLISHING-CHECKLIST.md)
@@ -212,7 +230,7 @@ High-value contribution areas right now:
 
 This repo is public and usable today, but still early. The current priority is reliability, better onboarding, and making it easy for outside contributors to help without having to reverse-engineer the codebase.
 
-One honest current limitation: Android runtime verification is still more manual than it should be. The repo now has a proxy smoke test and stronger in-app diagnostics, but emulator or device-level WebView regression coverage still needs another pass.
+Android runtime verification is intentionally split into automated repo gates and explicit Android-side evidence capture. The exact proof required for public releases now lives in [docs/RUNTIME-VERIFICATION.md](docs/RUNTIME-VERIFICATION.md), and the release bar itself is documented in [docs/RELEASE-RUNBOOK.md](docs/RELEASE-RUNBOOK.md).
 
 ## Positioning
 

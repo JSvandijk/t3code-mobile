@@ -7,6 +7,11 @@ Describe the change in 1 to 3 sentences.
 - [ ] `npm test`
 - [ ] Manual testing completed where relevant
 
+## Runtime Evidence
+
+- [ ] Runtime evidence attached or linked when Android or proxy behavior changed
+- [ ] Device / emulator details noted when manual runtime verification was required
+
 ## Checklist
 
 - [ ] Scope is focused

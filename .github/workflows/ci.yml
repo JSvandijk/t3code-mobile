@@ -5,10 +5,19 @@ on:
     branches:
       - main
   pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   node-checks:
     runs-on: ubuntu-latest
+    timeout-minutes: 10
 
     steps:
       - name: Check out repository
@@ -29,6 +38,7 @@ jobs:
   android-build:
     runs-on: windows-latest
     needs: node-checks
+    timeout-minutes: 20
 
     steps:
       - name: Check out repository
@@ -52,8 +62,22 @@ jobs:
         shell: cmd
         run: build-apk.bat
 
+      - name: Generate checksum
+        shell: pwsh
+        run: |
+          $apk = Get-ChildItem apk/build/output/T3Code-v*.apk | Select-Object -First 1
+          if (-not $apk) {
+            throw "APK artifact not found."
+          }
+          $hash = (Get-FileHash $apk.FullName -Algorithm SHA256).Hash.ToLower()
+          "$hash  $($apk.Name)" | Set-Content "$($apk.FullName).sha256"
+
       - name: Upload APK artifact
         uses: actions/upload-artifact@v4
         with:
           name: t3code-apk-dev
-          path: apk/build/output/T3Code-v*.apk
+          if-no-files-found: error
+          retention-days: 14
+          path: |
+            apk/build/output/T3Code-v*.apk
+            apk/build/output/T3Code-v*.apk.sha256

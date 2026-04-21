@@ -92,6 +92,7 @@ async function request(url) {
         resolve({
           status: res.statusCode,
           ok: res.statusCode >= 200 && res.statusCode < 300,
+          headers: res.headers,
           body: Buffer.concat(chunks).toString('utf8'),
         });
       });
@@ -175,6 +176,12 @@ async function main() {
     if (!rootResponse.ok) {
       throw new Error(`Proxy root returned ${rootResponse.status}`);
     }
+    if (rootResponse.headers['x-t3mobile-proxy'] !== require('./package.json').version) {
+      throw new Error(`Missing or invalid X-T3Mobile-Proxy header: ${JSON.stringify(rootResponse.headers)}`);
+    }
+    if (rootResponse.headers['x-content-type-options'] !== 'nosniff') {
+      throw new Error(`Missing X-Content-Type-Options header: ${JSON.stringify(rootResponse.headers)}`);
+    }
     if (!rootHtml.includes('<link rel="manifest" href="/manifest.json">')) {
       throw new Error('Expected the proxy to inject the manifest link.');
     }
@@ -186,6 +193,9 @@ async function main() {
     if (!manifestResponse.ok) {
       throw new Error(`manifest.json returned ${manifestResponse.status}`);
     }
+    if (manifestResponse.headers['cache-control'] !== 'no-cache') {
+      throw new Error(`manifest.json cache policy was unexpected: ${JSON.stringify(manifestResponse.headers)}`);
+    }
     const manifest = JSON.parse(manifestResponse.body);
     if (!Array.isArray(manifest.icons) || manifest.icons.length === 0) {
       throw new Error('manifest.json did not contain any icons.');
@@ -194,6 +204,9 @@ async function main() {
     const healthResponse = await fetchJson(`${proxyBaseUrl}/__t3mobile/health`);
     if (!healthResponse.ok) {
       throw new Error(`Health endpoint returned ${healthResponse.status}`);
+    }
+    if (healthResponse.headers['x-robots-tag'] !== 'noindex, nofollow') {
+      throw new Error(`Health endpoint headers were incomplete: ${JSON.stringify(healthResponse.headers)}`);
     }
     const health = healthResponse.json;
     if (health.service !== 't3code-mobile-proxy') {

@@ -62,10 +62,11 @@ Use `npm run harness:redirect` to confirm:
 
 ## Notes
 
-- The harness uses the repo's local `cert.pem` and `key.pem` files for the invalid-HTTPS path when they exist.
+- The harness can use local `cert.pem` and `key.pem` files for the invalid-HTTPS path when they exist.
 - If those files are absent, the harness generates a temporary self-signed certificate automatically.
 - Override paths with `SSL_KEY_PATH` and `SSL_CERT_PATH` if needed.
 - The harness also exposes `/status` for quick local checks.
+- Pair this guide with [RUNTIME-VERIFICATION.md](RUNTIME-VERIFICATION.md) when you are collecting release evidence.
 
 ## Recommended Evidence To Capture
 
