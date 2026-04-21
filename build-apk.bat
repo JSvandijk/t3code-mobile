@@ -7,6 +7,12 @@ if "%ROOT:~-1%"=="\" set "ROOT=%ROOT:~0,-1%"
 if not defined JAVA_HOME if exist "C:\Program Files\Android\Android Studio\jbr" (
     set "JAVA_HOME=C:\Program Files\Android\Android Studio\jbr"
 )
+if not defined ANDROID_SDK if defined ANDROID_SDK_ROOT (
+    set "ANDROID_SDK=%ANDROID_SDK_ROOT%"
+)
+if not defined ANDROID_SDK if defined ANDROID_HOME (
+    set "ANDROID_SDK=%ANDROID_HOME%"
+)
 if not defined ANDROID_SDK (
     set "ANDROID_SDK=%LOCALAPPDATA%\Android\Sdk"
 )
