@@ -9,6 +9,15 @@ An unofficial Android companion app and optional HTTPS/PWA proxy for [T3 Code](h
 
 `t3code-mobile` is built for one specific job: make your own T3 Code session usable from your phone with the least possible setup friction. It wraps a local T3 Code desktop instance in a fullscreen Android WebView, remembers the server URL, and keeps an inline photo upload shortcut available inside the chat composer.
 
+The pitch is simple: reliable, browserless, lightweight T3 access on Android. This repo does not try to become a heavy mobile control plane. It tries to be the cleanest and most dependable way to use your existing T3 Code session from a phone.
+
+## At A Glance
+
+- Browserless Android experience with no visible URL bar or browser chrome
+- Lightweight companion scope instead of a broader remote-agent dashboard
+- Reliability-first behavior: diagnostics, scoped navigation, smoke tests, and visible failure handling
+- Fast self-hosted phone access over Tailscale or a trusted local network
+
 ![T3 Code Mobile connect screen](docs/images/connect-screen.png)
 ![T3 Code Mobile pairing-link input](docs/images/pair-link-input.png)
 ![T3 Code Mobile composer with upload button](docs/images/composer-upload.png)
@@ -22,7 +31,7 @@ The upstream T3 Code project is the real product. This repository is intentional
 - It optimizes for quick phone access over Tailscale or a trusted LAN.
 - It stays lightweight instead of becoming a broader remote-agent platform.
 
-If that is the exact problem you have, this repo is deliberately small enough to understand, modify, and improve.
+If that is the exact problem you have, this repo is deliberately small enough to understand, modify, and improve. Less product surface is a feature here: fewer moving parts, less UI clutter, and fewer opportunities for mobile-specific breakage.
 
 ## Why This Is More Than A Simple Wrapper
 

@@ -4,7 +4,7 @@ Use this when you publish the next release or refresh the public GitHub page.
 
 ## Repository Description
 
-`Unofficial Android companion app and optional HTTPS/PWA proxy for T3 Code.`
+`Lightweight browserless Android companion app and optional HTTPS/PWA proxy for T3 Code.`
 
 ## Suggested Topics
 
@@ -27,7 +27,7 @@ Use this when you publish the next release or refresh the public GitHub page.
 ```md
 ## T3 Code Mobile: public release
 
-T3 Code Mobile is an unofficial Android companion app for T3 Code, focused on fast self-hosted phone access over Tailscale or a trusted local network.
+T3 Code Mobile is an unofficial Android companion app for T3 Code, focused on lightweight, browserless phone access over Tailscale or a trusted local network.
 
 ### What this release includes
 - Native Android WebView wrapper for T3 Code
@@ -39,12 +39,17 @@ T3 Code Mobile is an unofficial Android companion app for T3 Code, focused on fa
 - Public docs, issue templates, CI, and contributor guidelines
 
 ### Why this repo exists
-This project is intentionally narrow. It is not trying to replace T3 Code or become a full remote-agent platform. The goal is simpler: make an existing T3 Code session practical to use from a phone.
+This project is intentionally narrow. It is not trying to replace T3 Code or become a full remote-agent platform. The goal is simpler: make an existing T3 Code session practical, reliable, and pleasant to use from a phone.
 
 ### Why contributors may care
 - It tackles real self-hosted mobile reliability problems instead of building a generic browser shell
 - It includes visible support work: diagnostics, smoke tests, and narrow security boundaries
 - It stays small enough for targeted pull requests and practical experimentation
+
+### Strongest differentiator
+- The Android app keeps T3 Code in a fullscreen mobile shell with no browser URL bar
+- The project stays intentionally lightweight instead of becoming a heavier dashboard or agent control plane
+- Reliability and low-friction mobile access matter more here than feature sprawl
 
 ### Best fit
 - people already running T3 Code on their main machine

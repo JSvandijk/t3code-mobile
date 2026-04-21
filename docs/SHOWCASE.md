@@ -4,7 +4,7 @@ Use this document when you want to explain why this repository is worth attentio
 
 ## One-Sentence Pitch
 
-`t3code-mobile` turns an existing self-hosted T3 Code session into a phone-friendly experience with no browser chrome, faster setup, inline image upload support, and clearer failure diagnostics.
+`t3code-mobile` turns an existing self-hosted T3 Code session into a lightweight, browserless phone experience with faster setup, inline image upload support, and clearer failure diagnostics.
 
 ## Why This Repo Is Worth Looking At
 
@@ -13,6 +13,7 @@ Use this document when you want to explain why this repository is worth attentio
 - It includes reliability work, not just UI polish: diagnostics, scoped navigation, smoke tests, and health checks.
 - It shows deliberate product thinking: accept a full pairing link for convenience, but only keep the safe base URL.
 - It is small enough for contributors to understand without spending days reverse-engineering the codebase.
+- It has a clear taste-level opinion: on mobile, lightweight and dependable beats broader but more fragile product sprawl.
 
 ## Hard Engineering Work Already In The Repo
 
