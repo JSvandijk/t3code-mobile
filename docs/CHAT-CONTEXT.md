@@ -8,6 +8,14 @@ This file exists so a new chat or contributor can recover the important project 
 - Default branch: `main`
 - Current public version in `package.json`: `1.1.0`
 - Verified on April 21, 2026: local `main` and `origin/main` were brought back to the same commit and the worktree was clean.
+- Current synced `HEAD`: `2cb9c0f8d767667c23becedf3bda6a5b92d15179`
+- Required GitHub checks on that commit were green on April 21, 2026: `node-checks` and `android-build`
+
+## What Changed In The Latest Cleanup
+
+- The repo was resynced so local `main` and GitHub `origin/main` matched again.
+- This handoff file was added so future chats have a stable starting point from the repo itself.
+- `README.md` was updated to point new chats and maintainers to this file first.
 
 ## What This Repo Is
 
@@ -67,6 +75,8 @@ build-apk.bat
 
 A new chat cannot read old conversation history automatically. It can only read what is in the workspace unless you restate context.
 
+This file is an operational handoff, not a full transcript of prior discussions. It captures current repo state, scope, and where to read next.
+
 Use a prompt like this:
 
 ```text
@@ -77,6 +87,21 @@ If the task is specifically about releases, publishing, or repo hygiene, also te
 
 ```text
 docs/PUBLISHING-CHECKLIST.md and docs/MAINTAINER-SETUP.md
+```
+
+## For External Model Review
+
+If another model such as Opus is reviewing this repo, it should assume the repo state below unless the working tree shows otherwise:
+
+- local `main` and GitHub `origin/main` were synced
+- the latest documented synced commit in this handoff was `2cb9c0f8d767667c23becedf3bda6a5b92d15179`
+- the required GitHub checks for that synced state were green
+- prior conversation history is not available and should not be assumed
+
+Use a review prompt like this:
+
+```text
+Read README.md and docs/CHAT-CONTEXT.md first. Treat docs/CHAT-CONTEXT.md as the authoritative handoff. Then inspect package.json, server.js, webview-harness.js, and apk/app/src/main/java/com/t3code/app/MainActivity.java. Review the repo radically honestly for bugs, risks, regressions, unclear docs, release hygiene problems, and mismatches between stated behavior and implementation. Do not assume you have prior chat history; rely only on the repository state and the handoff.
 ```
 
 ## Maintenance Rule
