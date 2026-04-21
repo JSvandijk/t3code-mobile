@@ -20,9 +20,22 @@ The pitch is simple: reliable, browserless, lightweight T3 access on Android. Th
 - Reliability-first behavior: diagnostics, scoped navigation, smoke tests, and visible failure handling
 - Fast self-hosted phone access over Tailscale or a trusted local network
 
-![T3 Code Mobile connect screen](docs/images/connect-screen.png)
-![T3 Code Mobile pairing-link input](docs/images/pair-link-input.png)
-![T3 Code Mobile composer with upload button](docs/images/composer-upload.png)
+## Screenshots
+
+<table>
+  <tr>
+    <td width="33%"><img src="docs/images/browserless-chat.jpg" alt="T3 Code Mobile browserless in-chat view" /></td>
+    <td width="33%"><img src="docs/images/mobile-project-list.jpg" alt="T3 Code Mobile project and chat list" /></td>
+    <td width="33%"><img src="docs/images/native-photo-picker.jpg" alt="T3 Code Mobile native Android photo picker" /></td>
+  </tr>
+  <tr>
+    <td><strong>Browserless in-chat use</strong><br />A focused mobile T3 session inside the app, not a generic browser tab.</td>
+    <td><strong>Lightweight project workflow</strong><br />Fast mobile navigation without turning the app into a heavy dashboard.</td>
+    <td><strong>Native Android upload</strong><br />Photo selection stays inside the T3 mobile flow through the Android picker.</td>
+  </tr>
+</table>
+
+Browserless in-chat use, a lightweight mobile project list, and native Android photo upload are the three things this repo needs to prove quickly on GitHub. The app should look like a focused mobile companion, not a browser tab and not a heavy remote-agent dashboard.
 
 ## Why This Project Exists
 

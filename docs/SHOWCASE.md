@@ -15,6 +15,22 @@ Use this document when you want to explain why this repository is worth attentio
 - It is small enough for contributors to understand without spending days reverse-engineering the codebase.
 - It has a clear taste-level opinion: on mobile, lightweight and dependable beats broader but more fragile product sprawl.
 
+## What Publicly Attractive Repos Usually Get Right
+
+Repositories that collect attention tend to do a few simple things well above the fold:
+
+- They explain the product in one sentence without making readers reverse-engineer the scope.
+- They show real screenshots early, so visitors can see the product before they read deep docs.
+- They prove a concrete user benefit instead of leading with implementation details.
+- They make installation or evaluation look fast, even if the underlying engineering is not trivial.
+- They feel opinionated and narrow, which makes the repo easier to trust.
+
+For `t3code-mobile`, that means the homepage should emphasize three things immediately:
+
+- browserless in-app T3 usage on Android
+- a lightweight mobile workflow instead of a heavy dashboard
+- native phone behavior such as photo upload inside the T3 session
+
 ## Hard Engineering Work Already In The Repo
 
 - Full pairing-link parsing so users can paste what T3 gives them without manual cleanup.
@@ -36,29 +52,23 @@ Use this document when you want to explain why this repository is worth attentio
 
 ## Current Screenshot Set
 
-### Connect Screen
+### Browserless In-Chat View
 
-![T3 Code Mobile connect screen](images/connect-screen.png)
+![T3 Code Mobile browserless in-chat view](images/browserless-chat.jpg)
 
-Shows the browserless Android entry point and the narrow scope of the app.
+Shows the core claim directly: T3 is usable from a phone inside a focused app shell rather than a generic mobile browser tab.
 
-### Pairing-Link Input
+### Mobile Project And Chat List
 
-![T3 Code Mobile pairing-link input](images/pair-link-input.png)
+![T3 Code Mobile project and chat list](images/mobile-project-list.jpg)
 
-Shows that a full pairing link can be pasted while the app keeps only the base URL.
+Shows a lightweight project workflow that still feels readable and practical on a phone-sized screen.
 
-### Composer Upload Shortcut
+### Native Android Photo Picker
 
-![T3 Code Mobile composer with upload button](images/composer-upload.png)
+![T3 Code Mobile native Android photo picker](images/native-photo-picker.jpg)
 
-Shows the in-app photo upload action living inside the T3 composer flow.
-
-### Local Upload Harness
-
-![T3 Code Mobile local test harness](images/test-harness.png)
-
-Shows the local harness used to validate upload-button injection and paste behavior without depending on the upstream app being available during every test.
+Shows that uploads happen through native Android UI without breaking the in-app T3 flow.
 
 ## Recommended Public Framing
 
