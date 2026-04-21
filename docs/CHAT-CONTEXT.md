@@ -8,7 +8,7 @@ This file exists so a new chat or contributor can recover the important project 
 - Default branch: `main`
 - Current public version in `package.json`: `1.1.0`
 - Verified on April 21, 2026: local `main` and `origin/main` were brought back to the same commit and the worktree was clean.
-- Current synced `HEAD`: `2cb9c0f8d767667c23becedf3bda6a5b92d15179`
+- Current synced `HEAD`: `9104962a1cad351d3f0f2028eb9682aba4fc6870`
 - Required GitHub checks on that commit were green on April 21, 2026: `node-checks` and `android-build`
 
 ## What Changed In The Latest Cleanup
@@ -16,6 +16,7 @@ This file exists so a new chat or contributor can recover the important project 
 - The repo was resynced so local `main` and GitHub `origin/main` matched again.
 - This handoff file was added so future chats have a stable starting point from the repo itself.
 - `README.md` was updated to point new chats and maintainers to this file first.
+- This handoff was refined so an external reviewer such as Opus can read the repo state without prior chat history.
 
 ## What This Repo Is
 
@@ -94,7 +95,7 @@ docs/PUBLISHING-CHECKLIST.md and docs/MAINTAINER-SETUP.md
 If another model such as Opus is reviewing this repo, it should assume the repo state below unless the working tree shows otherwise:
 
 - local `main` and GitHub `origin/main` were synced
-- the latest documented synced commit in this handoff was `2cb9c0f8d767667c23becedf3bda6a5b92d15179`
+- the latest documented synced commit in this handoff was `9104962a1cad351d3f0f2028eb9682aba4fc6870`
 - the required GitHub checks for that synced state were green
 - prior conversation history is not available and should not be assumed
 
