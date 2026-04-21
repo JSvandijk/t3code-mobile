@@ -20,6 +20,11 @@ Use this guide to keep GitHub screenshots, release assets, and social posts cons
 | `docs/images/native-photo-picker.jpg` | Native upload support | `Use the Android photo picker without leaving the T3 mobile flow.` |
 | `docs/images/social-preview.png` | GitHub social preview | `Android WebView + Tailscale + optional PWA proxy.` |
 
+For the current GitHub-facing screenshot set, capture the project-list and workspace views from the harness demo routes when you need clean English UI:
+
+- `http://10.0.2.2:4888/demo/workspace`
+- `http://10.0.2.2:4888/demo/projects`
+
 ## Capture Checklist
 
 - Use placeholder hosts such as `http://your-t3-host:3773` when a URL must be shown.

@@ -31,6 +31,11 @@ For the Android emulator, open:
 
 The redirect harness returns an HTTP `302` to `https://10.0.2.2:4889/` by default.
 
+For screenshot-friendly English demo pages, also open:
+
+- `http://10.0.2.2:4888/demo/workspace`
+- `http://10.0.2.2:4888/demo/projects`
+
 ## What To Test
 
 ### HTTP Harness
@@ -66,5 +71,7 @@ Use `npm run harness:redirect` to confirm:
 
 - a clean connect-screen screenshot
 - a composer screenshot with the injected upload button visible
+- an English demo-workspace screenshot from `/demo/workspace`
+- an English project-list screenshot from `/demo/projects`
 - a certificate-blocking screenshot if the HTTPS error UI changes
 - device and Android version notes for any manual runtime verification

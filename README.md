@@ -105,7 +105,7 @@ Detailed instructions live in [INSTALLATION-GUIDE.md](INSTALLATION-GUIDE.md).
 - `manifest.json` and `sw.js`: installable PWA assets
 - `build-apk.bat`: Windows APK build script
 - `generate-icons.js`: icon generation helper
-- `tmp-webview-harness/`: static harness page used by the local WebView server
+- `tmp-webview-harness/`: static harness and English demo pages used by the local WebView server
 - `docs/`: comparison notes, publishing checklist, screenshots, and showcase docs
 
 ## Build And Run

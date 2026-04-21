@@ -6,6 +6,8 @@ const selfsigned = require('selfsigned');
 
 const repoPath = (targetPath) => path.resolve(__dirname, targetPath);
 const harnessHtml = fs.readFileSync(repoPath('tmp-webview-harness/index.html'), 'utf8');
+const demoWorkspaceHtml = fs.readFileSync(repoPath('tmp-webview-harness/demo-workspace.html'), 'utf8');
+const demoProjectsHtml = fs.readFileSync(repoPath('tmp-webview-harness/demo-projects.html'), 'utf8');
 
 const defaults = {
   'http': { protocol: 'http', port: 4888 },
@@ -99,6 +101,24 @@ function createRequestHandler(currentMode) {
       return;
     }
 
+    if (requestUrl.pathname === '/demo/workspace') {
+      res.writeHead(200, {
+        'Content-Type': 'text/html; charset=utf-8',
+        'Cache-Control': 'no-store',
+      });
+      res.end(demoWorkspaceHtml);
+      return;
+    }
+
+    if (requestUrl.pathname === '/demo/projects') {
+      res.writeHead(200, {
+        'Content-Type': 'text/html; charset=utf-8',
+        'Cache-Control': 'no-store',
+      });
+      res.end(demoProjectsHtml);
+      return;
+    }
+
     if (currentMode === 'redirect') {
       res.writeHead(302, {
         Location: redirectTarget,
@@ -161,6 +181,7 @@ async function main() {
       console.log(`  Redirect to:  ${redirectTarget}`);
     }
     console.log('  Status URL:   /status');
+    console.log('  Demo URLs:    /demo/workspace , /demo/projects');
     console.log('  ==========================================');
     console.log('');
   });
