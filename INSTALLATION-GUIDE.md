@@ -44,10 +44,12 @@ What you need:
 
 ### 3. Install The APK
 
-1. Build `T3Code.apk` locally or download a release asset if one is available in the repository.
+1. Build `T3Code.apk` locally for testing, or download a versioned GitHub release asset such as `T3Code-v1.1.0.apk`.
 2. Open the APK on your Android phone.
 3. Allow installation from unknown sources if Android asks.
 4. Finish the install.
+
+For public releases, prefer the GitHub release asset and verify the matching `.sha256` file before installing.
 
 ### 4. Connect And Pair
 
@@ -124,3 +126,9 @@ Open the printed HTTPS URL from your phone and use your browser's "Add to Home S
 - The app now blocks invalid or mismatched TLS certificates instead of bypassing them
 - Use a valid trusted certificate if you want HTTPS inside the app
 - If you are on Tailscale or another trusted private network, HTTP may be simpler for self-hosted use
+
+### The app warns before opening an HTTP server
+
+- That warning is expected on every HTTP session
+- Continue only if the server is reachable over Tailscale or another network you control
+- Use HTTPS for any broader or internet-reachable deployment

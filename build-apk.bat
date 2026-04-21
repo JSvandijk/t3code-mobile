@@ -31,7 +31,12 @@ set "CLASSES=%BUILD%\classes"
 set "OUTPUT=%BUILD%\output"
 set "COMPILED_RES=%BUILD%\compiled_res"
 set "DEX=%BUILD%\dex"
-set "DEBUG_KEYSTORE=%SIGNING%\debug.keystore"
+set "DEV_KEYSTORE=%SIGNING%\dev.keystore"
+set "RELEASE_KEYSTORE_PATH="
+set "SIGNING_MODE=dev"
+set "PACKAGE_VERSION="
+set "APK_VERSION_NAME="
+set "APK_VERSION_CODE="
 
 if not exist "%JAVA_HOME%\bin\javac.exe" (
     echo JAVA_HOME is not configured correctly.
@@ -50,6 +55,64 @@ if not exist "%PLATFORM%\android.jar" (
 )
 
 set "PATH=%JAVA_HOME%\bin;%PATH%"
+
+for /f "usebackq delims=" %%i in (`powershell -NoProfile -Command "(Get-Content '%ROOT%\package.json' -Raw | ConvertFrom-Json).version"`) do (
+    set "PACKAGE_VERSION=%%i"
+)
+
+if not defined PACKAGE_VERSION (
+    echo Failed to read the app version from package.json.
+    exit /b 1
+)
+
+if defined APK_VERSION_NAME (
+    set "APK_VERSION_NAME=%APK_VERSION_NAME%"
+) else (
+    set "APK_VERSION_NAME=%PACKAGE_VERSION%"
+)
+
+for /f "usebackq delims=" %%i in (`powershell -NoProfile -Command "$version='%APK_VERSION_NAME%'.Trim(); if ($version -notmatch '^\d+\.\d+\.\d+$') { throw 'APK_VERSION_NAME must use x.y.z format.' }; $parts = $version.Split('.'); $code = ([int]$parts[0] * 10000) + ([int]$parts[1] * 100) + [int]$parts[2]; if ($code -lt 1 -or $code -gt 2147483647) { throw 'APK_VERSION_CODE is out of range.' }; Write-Output $code"`) do (
+    set "APK_VERSION_CODE=%%i"
+)
+
+if not defined APK_VERSION_CODE (
+    echo Failed to derive APK_VERSION_CODE from %APK_VERSION_NAME%.
+    exit /b 1
+)
+
+if defined APK_KEYSTORE_BASE64 (
+    set "RELEASE_KEYSTORE_PATH=%SIGNING%\release.keystore"
+    powershell -NoProfile -Command "[IO.File]::WriteAllBytes('%SIGNING%\release.keystore', [Convert]::FromBase64String($env:APK_KEYSTORE_BASE64))"
+    if errorlevel 1 (
+        echo Failed to decode APK_KEYSTORE_BASE64.
+        exit /b 1
+    )
+) else if defined APK_KEYSTORE_PATH (
+    set "RELEASE_KEYSTORE_PATH=%APK_KEYSTORE_PATH%"
+) else if exist "%SIGNING%\release.keystore" (
+    set "RELEASE_KEYSTORE_PATH=%SIGNING%\release.keystore"
+)
+
+if defined RELEASE_KEYSTORE_PATH (
+    if not defined APK_KEYSTORE_PASSWORD (
+        echo APK_KEYSTORE_PASSWORD is required when using a release keystore.
+        exit /b 1
+    )
+    if not defined APK_KEY_ALIAS (
+        echo APK_KEY_ALIAS is required when using a release keystore.
+        exit /b 1
+    )
+    if not defined APK_KEY_PASSWORD (
+        echo APK_KEY_PASSWORD is required when using a release keystore.
+        exit /b 1
+    )
+    set "SIGNING_MODE=release"
+) else (
+    if /I "%APK_REQUIRE_RELEASE_SIGNING%"=="true" (
+        echo Release signing is required but no release keystore was provided.
+        exit /b 1
+    )
+)
 
 echo [1/8] Cleaning build directory
 if exist "%BUILD%" rmdir /s /q "%BUILD%"
@@ -80,6 +143,8 @@ for %%f in ("%COMPILED_RES%\*.flat") do (
     -I "%PLATFORM%\android.jar" ^
     --manifest "%SRC%\AndroidManifest.xml" ^
     --java "%GEN%" ^
+    --version-code "%APK_VERSION_CODE%" ^
+    --version-name "%APK_VERSION_NAME%" ^
     --min-sdk-version 24 ^
     --target-sdk-version 35 ^
     !FLAT_FILES!
@@ -133,37 +198,58 @@ if errorlevel 1 (
 )
 
 echo [7/8] Preparing signing key
-if not exist "%DEBUG_KEYSTORE%" (
-    keytool -genkeypair -v ^
-        -keystore "%DEBUG_KEYSTORE%" ^
-        -alias t3code-mobile ^
-        -keyalg RSA ^
-        -keysize 2048 ^
-        -validity 10000 ^
-        -storepass t3code123 ^
-        -keypass t3code123 ^
-        -dname "CN=T3 Code Mobile, O=JSvandijk, L=Remote"
+if /I "%SIGNING_MODE%"=="release" (
+    if not exist "%RELEASE_KEYSTORE_PATH%" (
+        echo Release keystore not found: %RELEASE_KEYSTORE_PATH%
+        exit /b 1
+    )
+) else (
+    if not exist "%DEV_KEYSTORE%" (
+        keytool -genkeypair -v ^
+            -keystore "%DEV_KEYSTORE%" ^
+            -alias t3code-mobile-dev ^
+            -keyalg RSA ^
+            -keysize 2048 ^
+            -validity 10000 ^
+            -storepass android ^
+            -keypass android ^
+            -dname "CN=T3 Code Mobile Dev, O=Local Build, L=Local"
+    )
 )
 
 echo [8/8] Signing APK
-call "%BUILD_TOOLS%\apksigner.bat" sign ^
-    --ks "%DEBUG_KEYSTORE%" ^
-    --ks-key-alias t3code-mobile ^
-    --ks-pass pass:t3code123 ^
-    --key-pass pass:t3code123 ^
-    --out "%OUTPUT%\T3Code.apk" ^
-    "%OUTPUT%\app.aligned.apk"
+if /I "%SIGNING_MODE%"=="release" (
+    call "%BUILD_TOOLS%\apksigner.bat" sign ^
+        --ks "%RELEASE_KEYSTORE_PATH%" ^
+        --ks-key-alias "%APK_KEY_ALIAS%" ^
+        --ks-pass env:APK_KEYSTORE_PASSWORD ^
+        --key-pass env:APK_KEY_PASSWORD ^
+        --out "%OUTPUT%\T3Code-v%APK_VERSION_NAME%.apk" ^
+        "%OUTPUT%\app.aligned.apk"
+) else (
+    echo Using a local development signing key. Do not publish this APK as a release.
+    call "%BUILD_TOOLS%\apksigner.bat" sign ^
+        --ks "%DEV_KEYSTORE%" ^
+        --ks-key-alias t3code-mobile-dev ^
+        --ks-pass pass:android ^
+        --key-pass pass:android ^
+        --out "%OUTPUT%\T3Code-v%APK_VERSION_NAME%.apk" ^
+        "%OUTPUT%\app.aligned.apk"
+)
 
 if errorlevel 1 (
     echo APK signing failed.
     exit /b 1
 )
 
-copy "%OUTPUT%\T3Code.apk" "%ROOT%\T3Code.apk" >nul
+copy "%OUTPUT%\T3Code-v%APK_VERSION_NAME%.apk" "%OUTPUT%\T3Code.apk" >nul
+copy "%OUTPUT%\T3Code-v%APK_VERSION_NAME%.apk" "%ROOT%\T3Code.apk" >nul
+copy "%OUTPUT%\T3Code-v%APK_VERSION_NAME%.apk" "%ROOT%\T3Code-v%APK_VERSION_NAME%.apk" >nul
 
 echo.
 echo APK built successfully:
-echo   %OUTPUT%\T3Code.apk
+echo   %OUTPUT%\T3Code-v%APK_VERSION_NAME%.apk
 echo.
 echo Copied to:
 echo   %ROOT%\T3Code.apk
+echo   %ROOT%\T3Code-v%APK_VERSION_NAME%.apk

@@ -7,9 +7,10 @@
     "start": "node server.js",
     "build:apk": "build-apk.bat",
     "generate:icons": "node generate-icons.js",
-    "check:js": "node --check server.js && node --check generate-icons.js",
+    "check:js": "node --check server.js && node --check generate-icons.js && node --check sw.js && node --check check-release.js",
     "check:manifest": "node -e \"JSON.parse(require('fs').readFileSync('manifest.json', 'utf8')); console.log('manifest.json OK')\"",
-    "test": "npm run check:js && npm run check:manifest"
+    "check:release": "node check-release.js",
+    "test": "npm run check:js && npm run check:manifest && npm run check:release"
   },
   "keywords": [
     "t3-code",

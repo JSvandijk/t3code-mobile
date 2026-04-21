@@ -22,11 +22,11 @@ const sslOptions = {
 };
 
 const staticFiles = {
-  '/manifest.json': { file: 'manifest.json', type: 'application/manifest+json' },
-  '/sw.js': { file: 'sw.js', type: 'application/javascript' },
-  '/icon.svg': { file: 'icon.svg', type: 'image/svg+xml' },
-  '/icon-192.png': { file: 'icon-192.png', type: 'image/png' },
-  '/icon-512.png': { file: 'icon-512.png', type: 'image/png' },
+  '/manifest.json': { file: 'manifest.json', type: 'application/manifest+json', cacheControl: 'no-cache' },
+  '/sw.js': { file: 'sw.js', type: 'application/javascript', cacheControl: 'no-store, must-revalidate' },
+  '/icon.svg': { file: 'icon.svg', type: 'image/svg+xml', cacheControl: 'public, max-age=86400' },
+  '/icon-192.png': { file: 'icon-192.png', type: 'image/png', cacheControl: 'public, max-age=86400' },
+  '/icon-512.png': { file: 'icon-512.png', type: 'image/png', cacheControl: 'public, max-age=86400' },
 };
 
 const pwaInject = `
@@ -53,6 +53,21 @@ const pwaInject = `
     </script>
 `;
 
+const HEAD_CLOSE_RE = /<\/head\s*>/i;
+
+const injectPwaMarkup = (html) => {
+  if (HEAD_CLOSE_RE.test(html)) {
+    return html.replace(HEAD_CLOSE_RE, `${pwaInject}\n</head>`);
+  }
+
+  const bodyIndex = html.search(/<body[\s>]/i);
+  if (bodyIndex !== -1) {
+    return `${html.slice(0, bodyIndex)}${pwaInject}\n${html.slice(bodyIndex)}`;
+  }
+
+  return `${pwaInject}\n${html}`;
+};
+
 const proxy = httpProxy.createProxyServer({
   target: T3_TARGET,
   ws: true,
@@ -70,6 +85,10 @@ proxy.on('proxyRes', (proxyRes, req, res) => {
   delete headers['content-length'];
   delete headers['content-encoding'];
   delete headers['transfer-encoding'];
+  delete headers.etag;
+  delete headers['last-modified'];
+  delete headers.expires;
+  delete headers.age;
 
   if (contentType.includes('text/html')) {
     const chunks = [];
@@ -83,9 +102,9 @@ proxy.on('proxyRes', (proxyRes, req, res) => {
       } catch (e) { /* ignore */ }
 
       let body = buffer.toString('utf-8');
-      if (body.includes('</head>')) {
-        body = body.replace('</head>', pwaInject + '\n</head>');
-      }
+      body = injectPwaMarkup(body);
+      headers['cache-control'] = 'no-store, must-revalidate';
+      headers.vary = 'Accept-Encoding';
       res.writeHead(proxyRes.statusCode, headers);
       res.end(body);
     });
@@ -109,10 +128,10 @@ proxy.on('error', (err, req, res) => {
 const handler = (req, res) => {
   const urlPath = req.url.split('?')[0];
   if (staticFiles[urlPath]) {
-    const { file, type } = staticFiles[urlPath];
+    const { file, type, cacheControl } = staticFiles[urlPath];
     try {
       const content = fs.readFileSync(path.join(__dirname, file));
-      res.writeHead(200, { 'Content-Type': type, 'Cache-Control': 'no-cache' });
+      res.writeHead(200, { 'Content-Type': type, 'Cache-Control': cacheControl });
       res.end(content);
       return;
     } catch (e) { /* fall through */ }

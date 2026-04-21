@@ -83,7 +83,7 @@ public class MainActivity extends Activity {
         if (serverUrl == null) {
             showUrlInput(null, "Paste either the base URL or the full pairing link. The app will keep only the base URL.");
         } else {
-            loadWebView(serverUrl);
+            openServer(serverUrl, false, true);
         }
     }
 
@@ -175,15 +175,8 @@ public class MainActivity extends Activity {
                 return;
             }
 
-            if (shouldWarnForCleartext(normalizedUrl)) {
-                showCleartextWarningDialog(normalizedUrl);
-                return;
-            }
-
             inputError.setVisibility(View.GONE);
-            saveServerUrl(normalizedUrl);
-            serverUrl = normalizedUrl;
-            loadWebView(normalizedUrl);
+            openServer(normalizedUrl, true, false);
         });
         layout.addView(connectButton);
 
@@ -517,6 +510,9 @@ public class MainActivity extends Activity {
         info.append("\n\nLast page: ").append(lastLoadedUrl);
         info.append("\n\nLast error: ").append(lastErrorMessage);
         info.append("\n\nSSL status: ").append(lastSslWarning);
+        if (serverUrl != null && isCleartextUrl(serverUrl)) {
+            info.append("\n\nTransport: HTTP. Continue only on Tailscale or another trusted private network.");
+        }
         info.append("\n\nNavigation policy: Only the configured server stays inside the app. Other links open externally.");
 
         new AlertDialog.Builder(this)
@@ -529,23 +525,48 @@ public class MainActivity extends Activity {
             .show();
     }
 
-    private void showCleartextWarningDialog(String normalizedUrl) {
-        String host = extractHost(normalizedUrl);
-        String warning = "This looks like an HTTP connection to a public-looking host";
-        if (host != null) {
-            warning += " (" + host + ")";
+    private void openServer(String normalizedUrl, boolean persistSelection, boolean showInputIfDeclined) {
+        if (isCleartextUrl(normalizedUrl)) {
+            showCleartextWarningDialog(normalizedUrl, persistSelection, showInputIfDeclined);
+            return;
         }
-        warning += ".\n\nHTTP is acceptable only on Tailscale or another trusted private network. Use HTTPS if this server is reachable more broadly.";
+
+        continueToServer(normalizedUrl, persistSelection);
+    }
+
+    private void continueToServer(String normalizedUrl, boolean persistSelection) {
+        if (persistSelection) {
+            saveServerUrl(normalizedUrl);
+        }
+        serverUrl = normalizedUrl;
+        loadWebView(normalizedUrl);
+    }
+
+    private void showCleartextWarningDialog(String normalizedUrl, boolean persistSelection, boolean showInputIfDeclined) {
+        String host = extractHost(normalizedUrl);
+        StringBuilder warning = new StringBuilder();
+        warning.append("You are about to open T3 Code over HTTP");
+        if (host != null) {
+            warning.append(" (").append(host).append(")");
+        }
+        warning.append(".\n\nTraffic over HTTP is not encrypted.");
+        if (isLikelyPrivateHost(host)) {
+            warning.append(" Continue only if this server is reachable through Tailscale or another network you control.");
+        } else {
+            warning.append(" This host does not look like a private network address. Prefer HTTPS before continuing.");
+        }
 
         new AlertDialog.Builder(this)
             .setTitle("Cleartext warning")
-            .setMessage(warning)
-            .setPositiveButton("Continue", (dialog, which) -> {
-                saveServerUrl(normalizedUrl);
-                serverUrl = normalizedUrl;
-                loadWebView(normalizedUrl);
+            .setMessage(warning.toString())
+            .setPositiveButton("Continue on HTTP", (dialog, which) ->
+                continueToServer(normalizedUrl, persistSelection)
+            )
+            .setNegativeButton(showInputIfDeclined ? "Change server" : "Cancel", (dialog, which) -> {
+                if (showInputIfDeclined) {
+                    showUrlInput(normalizedUrl, "HTTP connection was not started. Switch to HTTPS if possible.");
+                }
             })
-            .setNegativeButton("Cancel", null)
             .show();
     }
 
@@ -624,15 +645,13 @@ public class MainActivity extends Activity {
         return "https".equalsIgnoreCase(parsed.getScheme());
     }
 
-    private boolean shouldWarnForCleartext(String url) {
-        if (url == null || isHttpsUrl(url)) {
-            return false;
-        }
+    private boolean isCleartextUrl(String url) {
+        return url != null && !isHttpsUrl(url);
+    }
 
-        Uri parsed = Uri.parse(url);
-        String host = parsed.getHost();
+    private boolean isLikelyPrivateHost(String host) {
         if (host == null) {
-            return true;
+            return false;
         }
 
         String lowerHost = host.toLowerCase(Locale.US);
@@ -644,14 +663,10 @@ public class MainActivity extends Activity {
             || lowerHost.endsWith(".internal")
             || lowerHost.endsWith(".home.arpa")
         ) {
-            return false;
+            return true;
         }
 
-        if (isPrivateIpv4(lowerHost)) {
-            return false;
-        }
-
-        return lowerHost.contains(".");
+        return isPrivateIpv4(lowerHost);
     }
 
     private void saveServerUrl(String url) {
@@ -902,30 +917,77 @@ public class MainActivity extends Activity {
             "  return null;" +
             "}" +
 
+            "function getFallbackContainer() {" +
+            "  var composer = document.querySelector('[data-chat-composer-form]');" +
+            "  if (!composer) return null;" +
+            "  var container = document.getElementById('t3-mobile-actions');" +
+            "  if (container && container.parentNode === composer) return container;" +
+            "  if (container) container.remove();" +
+            "  container = document.createElement('div');" +
+            "  container.id = 't3-mobile-actions';" +
+            "  container.style.display = 'flex';" +
+            "  container.style.justifyContent = 'flex-end';" +
+            "  container.style.marginTop = '8px';" +
+            "  composer.appendChild(container);" +
+            "  return container;" +
+            "}" +
+
             "function ensureButton() {" +
             "  var anchor = findAnchorButton();" +
             "  var existing = document.getElementById('t3-img-btn');" +
-            "  if (!anchor || !anchor.parentNode) return false;" +
-            "  if (existing && existing.parentNode === anchor.parentNode) return true;" +
-            "  if (existing) existing.remove();" +
+            "  var fallback = getFallbackContainer();" +
+            "  if (anchor && anchor.parentNode) {" +
+            "    if (existing && existing.parentNode === anchor.parentNode) return true;" +
+            "    if (existing) existing.remove();" +
+            "  } else if (fallback) {" +
+            "    if (existing && existing.parentNode === fallback) return true;" +
+            "    if (existing) existing.remove();" +
+            "  } else {" +
+            "    console.warn('[T3 Mobile] Could not find a composer attachment target.');" +
+            "    return false;" +
+            "  }" +
             "  var btn = document.createElement('button');" +
             "  btn.id = 't3-img-btn';" +
             "  btn.type = 'button';" +
             "  btn.title = 'Add image';" +
             "  btn.setAttribute('aria-label', 'Add image');" +
-            "  btn.className = anchor.className;" +
+            "  btn.className = anchor ? anchor.className : '';" +
+            "  if (!anchor) {" +
+            "    btn.style.minWidth = '40px';" +
+            "    btn.style.minHeight = '40px';" +
+            "    btn.style.borderRadius = '12px';" +
+            "    btn.style.border = '1px solid rgba(148, 163, 184, 0.25)';" +
+            "    btn.style.background = 'transparent';" +
+            "    btn.style.color = 'inherit';" +
+            "    btn.style.display = 'inline-flex';" +
+            "    btn.style.alignItems = 'center';" +
+            "    btn.style.justifyContent = 'center';" +
+            "  }" +
             "  btn.innerHTML = '<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"16\" height=\"16\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><rect x=\"3\" y=\"3\" width=\"18\" height=\"18\" rx=\"2\" ry=\"2\"/><circle cx=\"8.5\" cy=\"8.5\" r=\"1.5\"/><polyline points=\"21 15 16 10 5 21\"/></svg>';" +
             "  btn.addEventListener('click', function(ev) {" +
             "    ev.preventDefault();" +
             "    ev.stopPropagation();" +
             "    getFileInput().click();" +
             "  });" +
-            "  anchor.parentNode.insertBefore(btn, anchor.nextSibling);" +
+            "  if (anchor && anchor.parentNode) {" +
+            "    anchor.parentNode.insertBefore(btn, anchor.nextSibling);" +
+            "  } else {" +
+            "    fallback.appendChild(btn);" +
+            "    console.warn('[T3 Mobile] Using fallback upload button placement.');" +
+            "  }" +
             "  return true;" +
             "}" +
 
             "ensureButton();" +
-            "new MutationObserver(function() { ensureButton(); }).observe(document.body, { childList:true, subtree:true });" +
+            "var observerTicking = false;" +
+            "new MutationObserver(function() {" +
+            "  if (observerTicking) return;" +
+            "  observerTicking = true;" +
+            "  requestAnimationFrame(function() {" +
+            "    observerTicking = false;" +
+            "    ensureButton();" +
+            "  });" +
+            "}).observe(document.body, { childList:true, subtree:true });" +
             "})();";
 
         if (webView != null) {

@@ -46,8 +46,9 @@ Use this before creating a public release or making a broader push for stars, us
 
 ## Release Notes
 
-- Tag a version before publishing a release
-- Upload the APK as a GitHub Release asset instead of committing binaries
+- Confirm the package version in `package.json` is final
+- Tag the exact release commit with the matching version, for example `v1.1.0`
+- Let the release workflow publish `T3Code-v<version>.apk` and `T3Code-v<version>.apk.sha256`
 - Use GitHub's automatically generated release notes, then edit the intro paragraph by hand
 - Include a short tested-on note and any known limitations
 - Link to [COMPARISON.md](COMPARISON.md) so readers understand project scope immediately

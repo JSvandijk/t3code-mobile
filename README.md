@@ -10,6 +10,7 @@ An unofficial Android companion app and optional HTTPS/PWA proxy for [T3 Code](h
 `t3code-mobile` is built for one specific job: make your own T3 Code session usable from your phone with the least possible setup friction. It wraps a local T3 Code desktop instance in a fullscreen Android WebView, remembers the server URL, and keeps an inline photo upload shortcut available inside the chat composer.
 
 ![T3 Code Mobile connect screen](docs/images/connect-screen.png)
+![T3 Code Mobile composer with upload button](docs/images/composer-upload.png)
 
 ## Why This Project Exists
 
@@ -32,6 +33,7 @@ If that is the exact problem you have, this repo is deliberately small enough to
 - MutationObserver-based reinjection so the upload button survives SPA navigation
 - Optional HTTPS reverse proxy that adds a manifest, service worker, and installable PWA behavior
 - Windows-friendly APK build flow without needing a full Gradle project workflow
+- Tag-driven GitHub release flow with versioned APKs and checksum output
 
 ## Quick Start
 
@@ -63,12 +65,22 @@ Requirements:
 - Android SDK with `build-tools 36.1.0`
 - Android platform `android-35`
 - JDK 11+
+- PowerShell 5+
 
 ```bat
 build-apk.bat
 ```
 
-This builds `apk/build/output/T3Code.apk` and copies it to the repo root as `T3Code.apk`.
+This builds `apk/build/output/T3Code-v<version>.apk`, copies the same file to the repo root as both `T3Code.apk` and `T3Code-v<version>.apk`, and injects Android `versionCode` and `versionName` from `package.json`.
+
+Without release-signing environment variables, the script uses a local development keystore and prints a warning. That output is fine for local testing but not for public GitHub releases or cross-machine update compatibility.
+
+For stable public updates, configure these GitHub Actions secrets and publish with a tag that matches `package.json`, for example `v1.1.0`:
+
+- `APK_KEYSTORE_BASE64`
+- `APK_KEYSTORE_PASSWORD`
+- `APK_KEY_ALIAS`
+- `APK_KEY_PASSWORD`
 
 ### Run The Optional PWA Proxy
 
@@ -94,7 +106,7 @@ Set the environment variables from [.env.example](.env.example) if you need cust
 
 - The app no longer proceeds past invalid TLS certificates.
 - HTTPS is preferred when you can issue a trusted certificate.
-- Cleartext HTTP remains supported for Tailscale or another trusted private network because that is a core self-hosted use case.
+- Cleartext HTTP remains supported for Tailscale or another trusted private network because that is a core self-hosted use case, but the app now warns before every HTTP session.
 - The app intentionally stays scoped to one configured server host inside the WebView; other destinations open outside the app.
 
 See [docs/SECURITY-AUDIT.md](docs/SECURITY-AUDIT.md) for the current audit notes, fixes, and remaining tradeoffs.

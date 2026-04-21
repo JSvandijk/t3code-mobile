@@ -24,4 +24,11 @@ Before opening an issue:
 - Improvement idea: open a feature request
 - Security-sensitive issue: follow [SECURITY.md](SECURITY.md)
 
+## Quick Troubleshooting
+
+- Pairing link confusion: paste the full link if you want, but the app saves only the base URL
+- Tailscale hostname issues: confirm both devices are in the same Tailnet and the hostname still resolves from your phone
+- Proxy certificate warnings: verify `PUBLIC_URL` matches the address you open and that the certificate is trusted by the device
+- Missing upload button: reload once, switch chats once, then include a screenshot if the button still does not appear
+
 Please keep private IPs, tokens, and certificates out of public issues.
