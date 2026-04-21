@@ -144,6 +144,8 @@ This builds `apk/build/output/T3Code-v<version>.apk`, copies the same file to th
 
 Without release-signing environment variables, the script uses a local development keystore and prints a warning. That output is fine for local testing but not for public GitHub releases or cross-machine update compatibility.
 
+If you want Android users to receive in-place APK upgrades across releases, keep the public release signing key stable. Changing the signing key forces users to uninstall the old app before installing the new one.
+
 For stable public updates, configure these GitHub Actions secrets and publish with a tag that matches `package.json`, for example `v1.1.0`:
 
 - `APK_KEYSTORE_BASE64`

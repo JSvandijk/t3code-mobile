@@ -11,6 +11,7 @@ A tag is release-ready only when all of the following are true:
 - the APK is built from a clean working tree
 - runtime evidence required by [RUNTIME-VERIFICATION.md](RUNTIME-VERIFICATION.md) is attached or linked
 - release signing secrets are configured
+- the release keystore has not been rotated in a way that breaks Android upgrade continuity
 - no TLS keys, certificates, `.env` files, or generated release artifacts are tracked in git
 
 ## Preflight
@@ -27,6 +28,7 @@ Then verify:
 - `package.json` version is final
 - `README.md`, `SECURITY.md`, and release-facing docs still match the product
 - screenshots and showcase notes are current enough for the release you are about to publish
+- the release keystore still matches the signing identity used for the previous public APK if you want users to update in place
 
 ## Build And Publish
 
@@ -52,5 +54,6 @@ Do not ship if any of these happen:
 - the tag does not match `package.json`
 - `npm test` fails
 - signing falls back to a development keystore
+- the release keystore changed unintentionally and would break APK upgrade continuity
 - runtime evidence is missing for Android- or proxy-affecting changes
 - the repo contains tracked secrets or generated release artifacts

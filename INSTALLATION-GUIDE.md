@@ -51,6 +51,12 @@ What you need:
 
 For public releases, prefer the GitHub release asset and verify the matching `.sha256` file before installing.
 
+Important update note:
+
+- Android only installs a new APK over an existing one when the package signature matches and the version code increases.
+- If you installed an earlier build signed with a different key, Android will reject the update.
+- In that case you must uninstall the old app first, then install the newer APK. That also removes the app's local saved state.
+
 ### 4. Connect And Pair
 
 1. Open the app.
@@ -112,6 +118,13 @@ For troubleshooting or smoke tests, open `https://your-proxy-host:3780/__t3mobil
 - Create a fresh link from `Settings` -> `Connections` -> `Create Link`
 - Tokens are usually single-use
 - Make sure you enter the base URL first, not the full `/pair#token=...` link
+
+### The new APK will not install over the old one
+
+- That usually means the installed app and the new APK were signed with different certificates.
+- Android treats that as a different trusted publisher and blocks the in-place update.
+- Uninstall the old app, then install the new release APK.
+- Expect local app state, including the saved server URL, to be cleared after uninstalling.
 
 ### The photo button is missing
 
