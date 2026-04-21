@@ -13,6 +13,20 @@ An unofficial Android companion app and optional HTTPS/PWA proxy for [T3 Code](h
 
 The pitch is simple: reliable, browserless, lightweight T3 access on Android. This repo does not try to become a heavy mobile control plane. It tries to be the cleanest and most dependable way to use your existing T3 Code session from a phone.
 
+## Why It Stands Out
+
+- It feels like a focused Android companion app, not a mobile browser tab.
+- It accepts full pairing-style links but stores only the base URL.
+- It keeps mobile reliability work visible: diagnostics, SSL blocking, scoped navigation, harness coverage, and release evidence.
+- It stays deliberately narrow instead of turning into a heavier remote-agent dashboard.
+
+## Evaluate It Fast
+
+- Product proof: screenshots below plus [docs/SHOWCASE.md](docs/SHOWCASE.md)
+- Technical proof: [docs/evidence/v1.1.0-emulator/README.md](docs/evidence/v1.1.0-emulator/README.md)
+- Architecture: [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)
+- Reproducible local checks: [docs/WEBVIEW-HARNESS.md](docs/WEBVIEW-HARNESS.md)
+
 ## At A Glance
 
 - Browserless Android experience with no visible URL bar or browser chrome
