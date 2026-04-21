@@ -153,6 +153,17 @@ For stable public updates, configure these GitHub Actions secrets and publish wi
 - `APK_KEY_ALIAS`
 - `APK_KEY_PASSWORD`
 
+If you still have the previous public signing key and need to recover Android update continuity after an accidental key change, the build also supports APK Signature Scheme v3 rotation and signing lineage. Add these optional GitHub Actions secrets for the next recovery release:
+
+- `APK_OLD_KEYSTORE_BASE64`
+- `APK_OLD_KEYSTORE_PASSWORD`
+- `APK_OLD_KEY_ALIAS`
+- `APK_OLD_KEY_PASSWORD`
+- `APK_SIGNING_LINEAGE_BASE64` (optional if you already have a lineage file to extend)
+- `APK_ROTATION_MIN_SDK_VERSION` (optional, defaults to `28`)
+
+That recovery path only works if the old release key still exists. If the old private key is gone, Android users already on the mismatched release cannot be migrated in place.
+
 ### Run The Optional PWA Proxy
 
 Use this mode if you want an installable browser version instead of the native APK.

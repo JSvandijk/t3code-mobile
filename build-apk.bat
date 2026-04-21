@@ -33,10 +33,16 @@ set "COMPILED_RES=%BUILD%\compiled_res"
 set "DEX=%BUILD%\dex"
 set "DEV_KEYSTORE=%SIGNING%\dev.keystore"
 set "RELEASE_KEYSTORE_PATH="
+set "OLD_RELEASE_KEYSTORE_PATH="
+set "SIGNING_LINEAGE_INPUT_PATH="
+set "SIGNING_LINEAGE_OUTPUT_PATH=%OUTPUT%\signing.lineage"
 set "SIGNING_MODE=dev"
+set "SIGNING_ROTATION_MODE=false"
 set "PACKAGE_VERSION="
 set "APK_VERSION_NAME="
 set "APK_VERSION_CODE="
+
+if not exist "%SIGNING%" mkdir "%SIGNING%"
 
 if not exist "%JAVA_HOME%\bin\javac.exe" (
     echo JAVA_HOME is not configured correctly.
@@ -93,6 +99,28 @@ if defined APK_KEYSTORE_BASE64 (
     set "RELEASE_KEYSTORE_PATH=%SIGNING%\release.keystore"
 )
 
+if defined APK_OLD_KEYSTORE_BASE64 (
+    set "OLD_RELEASE_KEYSTORE_PATH=%SIGNING%\old-release.keystore"
+    powershell -NoProfile -Command "[IO.File]::WriteAllBytes('%SIGNING%\old-release.keystore', [Convert]::FromBase64String($env:APK_OLD_KEYSTORE_BASE64))"
+    if errorlevel 1 (
+        echo Failed to decode APK_OLD_KEYSTORE_BASE64.
+        exit /b 1
+    )
+) else if defined APK_OLD_KEYSTORE_PATH (
+    set "OLD_RELEASE_KEYSTORE_PATH=%APK_OLD_KEYSTORE_PATH%"
+)
+
+if defined APK_SIGNING_LINEAGE_BASE64 (
+    set "SIGNING_LINEAGE_INPUT_PATH=%SIGNING%\provided-signing.lineage"
+    powershell -NoProfile -Command "[IO.File]::WriteAllBytes('%SIGNING%\provided-signing.lineage', [Convert]::FromBase64String($env:APK_SIGNING_LINEAGE_BASE64))"
+    if errorlevel 1 (
+        echo Failed to decode APK_SIGNING_LINEAGE_BASE64.
+        exit /b 1
+    )
+) else if defined APK_SIGNING_LINEAGE_PATH (
+    set "SIGNING_LINEAGE_INPUT_PATH=%APK_SIGNING_LINEAGE_PATH%"
+)
+
 if defined RELEASE_KEYSTORE_PATH (
     if not defined APK_KEYSTORE_PASSWORD (
         echo APK_KEYSTORE_PASSWORD is required when using a release keystore.
@@ -114,6 +142,42 @@ if defined RELEASE_KEYSTORE_PATH (
     )
 )
 
+if defined OLD_RELEASE_KEYSTORE_PATH (
+    if /I not "%SIGNING_MODE%"=="release" (
+        echo A current release keystore is required when configuring signing rotation.
+        exit /b 1
+    )
+    if not defined APK_OLD_KEYSTORE_PASSWORD (
+        echo APK_OLD_KEYSTORE_PASSWORD is required when using an old release keystore.
+        exit /b 1
+    )
+    if not defined APK_OLD_KEY_ALIAS (
+        echo APK_OLD_KEY_ALIAS is required when using an old release keystore.
+        exit /b 1
+    )
+    if not defined APK_OLD_KEY_PASSWORD (
+        echo APK_OLD_KEY_PASSWORD is required when using an old release keystore.
+        exit /b 1
+    )
+    set "SIGNING_ROTATION_MODE=true"
+) else if defined SIGNING_LINEAGE_INPUT_PATH (
+    echo APK_SIGNING_LINEAGE_PATH or APK_SIGNING_LINEAGE_BASE64 requires the previous release signer.
+    exit /b 1
+)
+
+if /I "%SIGNING_ROTATION_MODE%"=="true" (
+    if not defined APK_ROTATION_MIN_SDK_VERSION (
+        set "APK_ROTATION_MIN_SDK_VERSION=28"
+    )
+    for /f "usebackq delims=" %%i in (`powershell -NoProfile -Command "$value='%APK_ROTATION_MIN_SDK_VERSION%'.Trim(); if ($value -notmatch '^\d+$') { throw 'APK_ROTATION_MIN_SDK_VERSION must be an integer.' }; if ([int]$value -lt 28) { throw 'APK_ROTATION_MIN_SDK_VERSION must be at least 28.' }; Write-Output $value"`) do (
+        set "APK_ROTATION_MIN_SDK_VERSION=%%i"
+    )
+    if not defined APK_ROTATION_MIN_SDK_VERSION (
+        echo Failed to validate APK_ROTATION_MIN_SDK_VERSION.
+        exit /b 1
+    )
+)
+
 echo [1/8] Cleaning build directory
 if exist "%BUILD%" rmdir /s /q "%BUILD%"
 mkdir "%GEN%"
@@ -121,7 +185,6 @@ mkdir "%CLASSES%"
 mkdir "%OUTPUT%"
 mkdir "%COMPILED_RES%"
 mkdir "%DEX%"
-if not exist "%SIGNING%" mkdir "%SIGNING%"
 
 echo [2/8] Compiling Android resources
 for /r "%SRC%\res" %%f in (*.xml *.png) do (
@@ -203,6 +266,37 @@ if /I "%SIGNING_MODE%"=="release" (
         echo Release keystore not found: %RELEASE_KEYSTORE_PATH%
         exit /b 1
     )
+    if /I "%SIGNING_ROTATION_MODE%"=="true" (
+        if not exist "%OLD_RELEASE_KEYSTORE_PATH%" (
+            echo Old release keystore not found: %OLD_RELEASE_KEYSTORE_PATH%
+            exit /b 1
+        )
+        if defined SIGNING_LINEAGE_INPUT_PATH (
+            if not exist "%SIGNING_LINEAGE_INPUT_PATH%" (
+                echo Signing lineage not found: %SIGNING_LINEAGE_INPUT_PATH%
+                exit /b 1
+            )
+            copy "%SIGNING_LINEAGE_INPUT_PATH%" "%SIGNING_LINEAGE_OUTPUT_PATH%" >nul
+        ) else (
+            call "%BUILD_TOOLS%\apksigner.bat" rotate ^
+                --out "%SIGNING_LINEAGE_OUTPUT_PATH%" ^
+                --old-signer ^
+                --ks "%OLD_RELEASE_KEYSTORE_PATH%" ^
+                --ks-key-alias "%APK_OLD_KEY_ALIAS%" ^
+                --ks-pass env:APK_OLD_KEYSTORE_PASSWORD ^
+                --key-pass env:APK_OLD_KEY_PASSWORD ^
+                --set-installed-data true ^
+                --new-signer ^
+                --ks "%RELEASE_KEYSTORE_PATH%" ^
+                --ks-key-alias "%APK_KEY_ALIAS%" ^
+                --ks-pass env:APK_KEYSTORE_PASSWORD ^
+                --key-pass env:APK_KEY_PASSWORD
+            if errorlevel 1 (
+                echo Failed to generate a signing lineage for key rotation.
+                exit /b 1
+            )
+        )
+    )
 ) else (
     if not exist "%DEV_KEYSTORE%" (
         keytool -genkeypair -v ^
@@ -219,13 +313,30 @@ if /I "%SIGNING_MODE%"=="release" (
 
 echo [8/8] Signing APK
 if /I "%SIGNING_MODE%"=="release" (
-    call "%BUILD_TOOLS%\apksigner.bat" sign ^
-        --ks "%RELEASE_KEYSTORE_PATH%" ^
-        --ks-key-alias "%APK_KEY_ALIAS%" ^
-        --ks-pass env:APK_KEYSTORE_PASSWORD ^
-        --key-pass env:APK_KEY_PASSWORD ^
-        --out "%OUTPUT%\T3Code-v%APK_VERSION_NAME%.apk" ^
-        "%OUTPUT%\app.aligned.apk"
+    if /I "%SIGNING_ROTATION_MODE%"=="true" (
+        call "%BUILD_TOOLS%\apksigner.bat" sign ^
+            --lineage "%SIGNING_LINEAGE_OUTPUT_PATH%" ^
+            --rotation-min-sdk-version "%APK_ROTATION_MIN_SDK_VERSION%" ^
+            --ks "%OLD_RELEASE_KEYSTORE_PATH%" ^
+            --ks-key-alias "%APK_OLD_KEY_ALIAS%" ^
+            --ks-pass env:APK_OLD_KEYSTORE_PASSWORD ^
+            --key-pass env:APK_OLD_KEY_PASSWORD ^
+            --next-signer ^
+            --ks "%RELEASE_KEYSTORE_PATH%" ^
+            --ks-key-alias "%APK_KEY_ALIAS%" ^
+            --ks-pass env:APK_KEYSTORE_PASSWORD ^
+            --key-pass env:APK_KEY_PASSWORD ^
+            --out "%OUTPUT%\T3Code-v%APK_VERSION_NAME%.apk" ^
+            "%OUTPUT%\app.aligned.apk"
+    ) else (
+        call "%BUILD_TOOLS%\apksigner.bat" sign ^
+            --ks "%RELEASE_KEYSTORE_PATH%" ^
+            --ks-key-alias "%APK_KEY_ALIAS%" ^
+            --ks-pass env:APK_KEYSTORE_PASSWORD ^
+            --key-pass env:APK_KEY_PASSWORD ^
+            --out "%OUTPUT%\T3Code-v%APK_VERSION_NAME%.apk" ^
+            "%OUTPUT%\app.aligned.apk"
+    )
 ) else (
     echo Using a local development signing key. Do not publish this APK as a release.
     call "%BUILD_TOOLS%\apksigner.bat" sign ^

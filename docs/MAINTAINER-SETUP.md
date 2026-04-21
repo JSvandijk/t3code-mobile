@@ -39,6 +39,13 @@ Use this checklist to keep the public repository configuration aligned with the 
   - `APK_KEYSTORE_PASSWORD`
   - `APK_KEY_ALIAS`
   - `APK_KEY_PASSWORD`
+- If you ever need to recover from an accidental release-key change and the previous key still exists, also configure:
+  - `APK_OLD_KEYSTORE_BASE64`
+  - `APK_OLD_KEYSTORE_PASSWORD`
+  - `APK_OLD_KEY_ALIAS`
+  - `APK_OLD_KEY_PASSWORD`
+  - `APK_SIGNING_LINEAGE_BASE64` (optional if you already have a lineage file)
+  - `APK_ROTATION_MIN_SDK_VERSION` (optional, defaults to `28`)
 - Push a tag that matches `package.json`, for example `v1.1.0`
 - Let `.github/workflows/release.yml` publish the versioned APK and checksum
 - Include tested Android version, Android System WebView version, and device notes

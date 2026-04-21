@@ -29,6 +29,7 @@ Then verify:
 - `README.md`, `SECURITY.md`, and release-facing docs still match the product
 - screenshots and showcase notes are current enough for the release you are about to publish
 - the release keystore still matches the signing identity used for the previous public APK if you want users to update in place
+- if you are recovering from an accidental signing-key change, both the previous and current signing keys are still available so a rotated release can be produced
 
 ## Build And Publish
 
@@ -37,6 +38,21 @@ Then verify:
 3. Let `.github/workflows/release.yml` build the signed APK and checksum.
 4. Open or update a runtime evidence record using [docs/evidence/RELEASE-EVIDENCE-TEMPLATE.md](evidence/RELEASE-EVIDENCE-TEMPLATE.md) or the `Runtime evidence` issue form.
 5. Review the generated GitHub Release before sharing it publicly.
+
+## Signing Continuity Recovery
+
+If a previous public APK was signed with a different key, Android will block direct upgrades until you either go back to the original key or publish a rotated release with a valid signing lineage.
+
+To recover continuity for a future release, configure the normal release secrets plus these optional secrets:
+
+- `APK_OLD_KEYSTORE_BASE64`
+- `APK_OLD_KEYSTORE_PASSWORD`
+- `APK_OLD_KEY_ALIAS`
+- `APK_OLD_KEY_PASSWORD`
+- `APK_SIGNING_LINEAGE_BASE64` if you already have a lineage file to extend
+- `APK_ROTATION_MIN_SDK_VERSION` if you need to override the default `28`
+
+This recovery path is only possible while the old private key still exists. If the old key is gone, there is no safe way to make Android accept an in-place upgrade from the mismatched public release.
 
 ## Required Release Notes Content
 
@@ -55,5 +71,6 @@ Do not ship if any of these happen:
 - `npm test` fails
 - signing falls back to a development keystore
 - the release keystore changed unintentionally and would break APK upgrade continuity
+- you need signing continuity recovery but do not have access to the previous release key
 - runtime evidence is missing for Android- or proxy-affecting changes
 - the repo contains tracked secrets or generated release artifacts

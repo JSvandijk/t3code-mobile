@@ -66,6 +66,12 @@ jobs:
           APK_KEYSTORE_PASSWORD: ${{ secrets.APK_KEYSTORE_PASSWORD }}
           APK_KEY_ALIAS: ${{ secrets.APK_KEY_ALIAS }}
           APK_KEY_PASSWORD: ${{ secrets.APK_KEY_PASSWORD }}
+          APK_OLD_KEYSTORE_BASE64: ${{ secrets.APK_OLD_KEYSTORE_BASE64 }}
+          APK_OLD_KEYSTORE_PASSWORD: ${{ secrets.APK_OLD_KEYSTORE_PASSWORD }}
+          APK_OLD_KEY_ALIAS: ${{ secrets.APK_OLD_KEY_ALIAS }}
+          APK_OLD_KEY_PASSWORD: ${{ secrets.APK_OLD_KEY_PASSWORD }}
+          APK_SIGNING_LINEAGE_BASE64: ${{ secrets.APK_SIGNING_LINEAGE_BASE64 }}
+          APK_ROTATION_MIN_SDK_VERSION: ${{ secrets.APK_ROTATION_MIN_SDK_VERSION }}
         run: build-apk.bat
 
       - name: Generate checksum

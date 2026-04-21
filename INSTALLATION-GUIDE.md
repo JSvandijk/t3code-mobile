@@ -56,6 +56,7 @@ Important update note:
 - Android only installs a new APK over an existing one when the package signature matches and the version code increases.
 - If you installed an earlier build signed with a different key, Android will reject the update.
 - In that case you must uninstall the old app first, then install the newer APK. That also removes the app's local saved state.
+- Maintainers can recover future update continuity only if they still have the old signing key and publish a rotated release signed with an Android signing lineage.
 
 ### 4. Connect And Pair
 
@@ -125,6 +126,7 @@ For troubleshooting or smoke tests, open `https://your-proxy-host:3780/__t3mobil
 - Android treats that as a different trusted publisher and blocks the in-place update.
 - Uninstall the old app, then install the new release APK.
 - Expect local app state, including the saved server URL, to be cleared after uninstalling.
+- Future releases can avoid this only by keeping the same signing key, or by publishing a properly rotated release while the old key is still available.
 
 ### The photo button is missing
 
