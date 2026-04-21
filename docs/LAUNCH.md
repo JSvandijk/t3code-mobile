@@ -4,7 +4,7 @@ Use this when you publish the next release or refresh the public GitHub page.
 
 ## Repository Description
 
-`Lightweight browserless Android companion app and optional HTTPS/PWA proxy for T3 Code.`
+`The lightweight, browserless, reliability-first Android companion app for T3 Code.`
 
 ## Suggested Topics
 
@@ -20,7 +20,7 @@ Use this when you publish the next release or refresh the public GitHub page.
 
 ## Suggested Release Title
 
-`T3 Code Mobile: public release`
+`T3 Code Mobile: lightweight browserless T3 on Android`
 
 ## Suggested Release Body
 

@@ -7,6 +7,8 @@
 
 An unofficial Android companion app and optional HTTPS/PWA proxy for [T3 Code](https://github.com/pingdotgg/t3code).
 
+> The lightweight, browserless, reliability-first way to use T3 Code on Android.
+
 `t3code-mobile` is built for one specific job: make your own T3 Code session usable from your phone with the least possible setup friction. It wraps a local T3 Code desktop instance in a fullscreen Android WebView, remembers the server URL, and keeps an inline photo upload shortcut available inside the chat composer.
 
 The pitch is simple: reliable, browserless, lightweight T3 access on Android. This repo does not try to become a heavy mobile control plane. It tries to be the cleanest and most dependable way to use your existing T3 Code session from a phone.
