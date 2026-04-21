@@ -27,6 +27,7 @@ This roadmap is intentionally short and practical. The goal is to make the proje
 - Better logging for WebView and proxy failures
 - Device lab notes for tested Android/WebView versions
 - Expand the local harness with more realistic upstream DOM fixtures if T3 UI changes start breaking selector assumptions
+- More proxy tuning for mobile networks: reconnect behavior, timeout tuning, and latency notes without growing into a broader platform
 
 ## Not The Goal
 

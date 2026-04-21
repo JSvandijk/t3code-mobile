@@ -17,6 +17,13 @@ const PUBLIC_URL = fromEnvOrDefault('PUBLIC_URL', `https://localhost:${HTTPS_POR
 const SSL_KEY_PATH = resolveMaybeRelative(fromEnvOrDefault('SSL_KEY_PATH', './key.pem'));
 const SSL_CERT_PATH = resolveMaybeRelative(fromEnvOrDefault('SSL_CERT_PATH', './cert.pem'));
 const HEALTH_PATH = '/__t3mobile/health';
+const UPSTREAM_TIMEOUT_MS = Number(fromEnvOrDefault('UPSTREAM_TIMEOUT_MS', '15000'));
+const upstreamUrl = new URL(T3_TARGET);
+const upstreamAgent = upstreamUrl.protocol === 'https:'
+  ? new https.Agent({ keepAlive: true })
+  : new http.Agent({ keepAlive: true });
+const healthHttpAgent = new http.Agent({ keepAlive: true });
+const healthHttpsAgent = new https.Agent({ keepAlive: true });
 
 const sslOptions = {
   key: fs.readFileSync(SSL_KEY_PATH),
@@ -74,14 +81,17 @@ const proxy = httpProxy.createProxyServer({
   target: T3_TARGET,
   ws: true,
   selfHandleResponse: true,
+  agent: upstreamAgent,
 });
 
 const requestTarget = (targetUrl) => new Promise((resolve) => {
   const url = new URL(targetUrl);
   const client = url.protocol === 'https:' ? https : http;
+  const startedAt = Date.now();
   const request = client.request(url, {
     method: 'GET',
-    timeout: 4000,
+    timeout: Math.min(UPSTREAM_TIMEOUT_MS, 5000),
+    agent: url.protocol === 'https:' ? healthHttpsAgent : healthHttpAgent,
     headers: {
       Accept: 'text/html,application/json;q=0.9,*/*;q=0.1',
       'User-Agent': `t3code-mobile-health/${pkg.version}`,
@@ -97,9 +107,11 @@ const requestTarget = (targetUrl) => new Promise((resolve) => {
       const preview = Buffer.concat(chunks).toString('utf8').replace(/\s+/g, ' ').trim().slice(0, 200);
       resolve({
         ok: response.statusCode >= 200 && response.statusCode < 400,
+        durationMs: Date.now() - startedAt,
         statusCode: response.statusCode,
         contentType: response.headers['content-type'] || null,
         preview,
+        timeoutMs: Math.min(UPSTREAM_TIMEOUT_MS, 5000),
       });
     });
   });
@@ -108,10 +120,12 @@ const requestTarget = (targetUrl) => new Promise((resolve) => {
   request.on('error', (error) => {
     resolve({
       ok: false,
+      durationMs: Date.now() - startedAt,
       statusCode: null,
       contentType: null,
       preview: '',
       error: error.message,
+      timeoutMs: Math.min(UPSTREAM_TIMEOUT_MS, 5000),
     });
   });
   request.end();
@@ -121,8 +135,87 @@ const sendJson = (res, statusCode, payload) => {
   res.writeHead(statusCode, {
     'Content-Type': 'application/json; charset=utf-8',
     'Cache-Control': 'no-store, must-revalidate',
+    'X-T3Mobile-Proxy': pkg.version,
   });
   res.end(JSON.stringify(payload, null, 2));
+};
+
+const renderProxyErrorPage = ({ statusCode, title, message }) => `<!doctype html>
+<html>
+  <head>
+    ${pwaInject}
+    <style>
+      body {
+        background: #161616;
+        color: #e0e0e0;
+        font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 100vh;
+        margin: 0;
+        padding: 24px;
+      }
+      .card {
+        max-width: 480px;
+        width: 100%;
+        background: rgba(17, 24, 39, 0.92);
+        border: 1px solid rgba(148, 163, 184, 0.18);
+        border-radius: 18px;
+        padding: 24px;
+        box-sizing: border-box;
+      }
+      h1 {
+        color: #8B7BFF;
+        font-size: 24px;
+        margin: 0 0 12px;
+      }
+      p {
+        color: #D1D5DB;
+        line-height: 1.55;
+        margin: 0 0 12px;
+      }
+      .meta {
+        color: #9CA3AF;
+        font-size: 14px;
+        margin-bottom: 20px;
+      }
+      button {
+        background: #6C63FF;
+        color: #fff;
+        border: none;
+        padding: 12px 18px;
+        border-radius: 10px;
+        font-size: 15px;
+        cursor: pointer;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="card">
+      <h1>${title}</h1>
+      <p>${message}</p>
+      <div class="meta">HTTP ${statusCode}</div>
+      <button onclick="location.reload()">Retry</button>
+    </div>
+  </body>
+</html>`;
+
+const sendProxyErrorResponse = (res, err) => {
+  if (!res || !res.writeHead || res.headersSent || res.writableEnded) {
+    return;
+  }
+
+  const statusCode = 502;
+  const title = 'T3 Code is unavailable';
+  const message = 'The proxy could not reach your upstream T3 Code session. Verify that T3 Code is still running, the target URL is correct, and your private network path is reachable.';
+
+  res.writeHead(statusCode, {
+    'Content-Type': 'text/html; charset=utf-8',
+    'Cache-Control': 'no-store, must-revalidate',
+    'X-T3Mobile-Proxy': pkg.version,
+  });
+  res.end(renderProxyErrorPage({ statusCode, title, message }));
 };
 
 const serveHealth = async (res) => {
@@ -135,6 +228,7 @@ const serveHealth = async (res) => {
     target: T3_TARGET,
     timestamp: new Date().toISOString(),
     uptimeSeconds: Math.round(process.uptime()),
+    upstreamTimeoutMs: UPSTREAM_TIMEOUT_MS,
     tls: {
       keyPath: SSL_KEY_PATH,
       certPath: SSL_CERT_PATH,
@@ -187,16 +281,11 @@ proxy.on('proxyRes', (proxyRes, req, res) => {
 });
 
 proxy.on('error', (err, req, res) => {
-  if (res && res.writeHead) {
-    res.writeHead(502, { 'Content-Type': 'text/html' });
-    res.end(`<html><head>${pwaInject}<style>
-      body{background:#161616;color:#e0e0e0;font-family:sans-serif;display:flex;align-items:center;justify-content:center;min-height:100vh;margin:0}
-      h1{color:#6C63FF}button{background:#6C63FF;color:#fff;border:none;padding:12px 24px;border-radius:8px;font-size:1rem;cursor:pointer;margin-top:1rem}
-    </style></head><body><div style="text-align:center"><h1>T3</h1><p>T3 Code is unavailable</p><button onclick="location.reload()">Retry</button></div></body></html>`);
-  }
+  sendProxyErrorResponse(res, err);
 });
 
 const handler = (req, res) => {
+  res.setHeader('X-T3Mobile-Proxy', pkg.version);
   const urlPath = req.url.split('?')[0];
   if (urlPath === HEALTH_PATH) {
     serveHealth(res).catch((error) => {
@@ -237,6 +326,7 @@ server.listen(HTTPS_PORT, '0.0.0.0', () => {
   console.log('  ==========================================');
   console.log(`  Public URL: ${PUBLIC_URL}`);
   console.log(`  Target:     ${T3_TARGET}`);
+  console.log(`  Timeout:    ${UPSTREAM_TIMEOUT_MS} ms`);
   console.log(`  Key path:   ${SSL_KEY_PATH}`);
   console.log(`  Cert path:  ${SSL_CERT_PATH}`);
   console.log('  ==========================================');

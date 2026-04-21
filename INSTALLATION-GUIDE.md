@@ -80,6 +80,7 @@ Supported environment variables:
 - `HTTPS_PORT`
 - `T3_TARGET`
 - `PUBLIC_URL`
+- `UPSTREAM_TIMEOUT_MS`
 - `SSL_KEY_PATH`
 - `SSL_CERT_PATH`
 
@@ -94,7 +95,7 @@ npm start
 
 Open the printed HTTPS URL from your phone and use your browser's "Add to Home Screen" or install action.
 
-For troubleshooting or smoke tests, open `https://your-proxy-host:3780/__t3mobile/health` and confirm the JSON shows a healthy upstream target.
+For troubleshooting or smoke tests, open `https://your-proxy-host:3780/__t3mobile/health` and confirm the JSON shows a healthy upstream target, the configured timeout budget, and the latest probe latency.
 
 ## Troubleshooting
 

@@ -12,6 +12,7 @@ This project is most credible to `pingdotgg/t3code` when it stays narrow and rel
 ## What This Repo Tries To Prove
 
 - A mobile companion can be built without turning T3 Code into a different product.
+- A browserless Android shell is a meaningful product difference from phone-in-browser access.
 - WebView-based access can still be handled with disciplined security defaults and visible error handling.
 - Small self-hosted tools benefit from observability too: copyable diagnostics in the app and a health endpoint in proxy mode make support and triage much faster.
 

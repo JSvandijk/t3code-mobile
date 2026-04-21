@@ -144,6 +144,7 @@ async function main() {
       HTTPS_PORT: String(proxyPort),
       T3_TARGET: `http://127.0.0.1:${harnessPort}`,
       PUBLIC_URL: `https://127.0.0.1:${proxyPort}`,
+      UPSTREAM_TIMEOUT_MS: '250',
       SSL_KEY_PATH: testCertificates.keyPath,
       SSL_CERT_PATH: testCertificates.certPath,
     },
@@ -198,8 +199,14 @@ async function main() {
     if (health.service !== 't3code-mobile-proxy') {
       throw new Error('Health endpoint returned an unexpected service name.');
     }
+    if (!Number.isFinite(health.upstreamTimeoutMs) || health.upstreamTimeoutMs !== 250) {
+      throw new Error(`Health endpoint did not return the configured upstream timeout: ${JSON.stringify(health)}`);
+    }
     if (!health.upstream || health.upstream.ok !== true || health.upstream.statusCode !== 200) {
       throw new Error(`Health endpoint did not report a healthy upstream target: ${JSON.stringify(health.upstream)}`);
+    }
+    if (!Number.isFinite(health.upstream.durationMs)) {
+      throw new Error(`Health endpoint did not return upstream durationMs: ${JSON.stringify(health.upstream)}`);
     }
 
     console.log('proxy smoke test OK');

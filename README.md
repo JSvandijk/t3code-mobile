@@ -57,7 +57,7 @@ If another T3 user or contributor opens this repo, they should be able to see bo
 - Safer pairing flow: full pairing links are accepted for convenience, but only the base server URL is stored.
 - Support-first diagnostics: HTTP, SSL, and network details can be copied from inside the app for faster triage.
 - Resilient upload UX: the photo button is restored after upstream SPA transitions rather than relying on a one-shot DOM injection.
-- Testable proxy mode: the optional HTTPS proxy exposes `GET /__t3mobile/health` and has a smoke test for HTML injection and assets.
+- Testable proxy mode: the optional HTTPS proxy exposes `GET /__t3mobile/health`, reports upstream latency, and has a smoke test for HTML injection and assets.
 - Contributor-ready harness: `npm run harness:http`, `harness:https-bad-cert`, and `harness:redirect` make Android WebView behavior reproducible.
 - CI-safe proxy smoke test: the proxy test can generate temporary self-signed certificates when local TLS files are absent.
 - Upstream-friendly scope: the repo stays narrow enough to complement T3 Code instead of drifting into a general remote-agent product.
@@ -122,7 +122,7 @@ npm start
 
 Set the environment variables from [.env.example](.env.example) if you need custom paths or ports. The proxy expects valid TLS files via `SSL_KEY_PATH` and `SSL_CERT_PATH`.
 
-The proxy also exposes `GET /__t3mobile/health`, which returns JSON about the proxy process and whether the upstream T3 target is reachable.
+The proxy also exposes `GET /__t3mobile/health`, which returns JSON about the proxy process, the configured upstream timeout, upstream reachability, and probe latency.
 
 ## How It Works
 
@@ -132,7 +132,7 @@ The proxy also exposes `GET /__t3mobile/health`, which returns JSON about the pr
 - After each page load, the app injects a custom image button into the composer footer.
 - A hidden file input is recreated when needed during SPA navigation.
 - Selected images are passed into T3 Code through a `ClipboardEvent` paste flow.
-- The optional proxy injects PWA metadata and service worker registration into the upstream HTML and exposes a lightweight health endpoint for smoke tests and troubleshooting.
+- The optional proxy injects PWA metadata and service worker registration into the upstream HTML, keeps upstream connections alive for lighter reconnects, and exposes a lightweight health endpoint for smoke tests and troubleshooting.
 
 ## Proof And Assets
 
