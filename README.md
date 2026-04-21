@@ -108,6 +108,8 @@ Detailed instructions live in [INSTALLATION-GUIDE.md](INSTALLATION-GUIDE.md).
 - `tmp-webview-harness/`: static harness and English demo pages used by the local WebView server
 - `docs/`: comparison notes, publishing checklist, screenshots, and showcase docs
 
+If you are picking this project up in a new chat or after time away, read [docs/CHAT-CONTEXT.md](docs/CHAT-CONTEXT.md) first for the current handoff.
+
 ## Build And Run
 
 ### Build The APK
