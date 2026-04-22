@@ -1,0 +1,263 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>T3 Mobile Demo Workspace</title>
+<style>
+:root {
+  color-scheme: dark;
+  --bg: #0b1020;
+  --panel: #11182c;
+  --panel-2: #16203a;
+  --line: rgba(148, 163, 184, 0.16);
+  --text: #f8fafc;
+  --muted: #9aa5bb;
+  --brand: #8b7bff;
+  --brand-2: #65d1c4;
+}
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  background:
+    radial-gradient(circle at top left, rgba(139, 123, 255, 0.22), transparent 34%),
+    radial-gradient(circle at top right, rgba(101, 209, 196, 0.16), transparent 28%),
+    var(--bg);
+  color: var(--text);
+}
+.page {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+.topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 18px 16px 12px;
+}
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.logo {
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+  display: grid;
+  place-items: center;
+  color: #fff;
+  font-weight: 800;
+  background: linear-gradient(135deg, var(--brand), #6b63ff);
+  box-shadow: 0 10px 24px rgba(107, 99, 255, 0.28);
+}
+.brand-copy h1 {
+  margin: 0;
+  font-size: 19px;
+  line-height: 1.05;
+}
+.brand-copy p {
+  margin: 2px 0 0;
+  color: var(--muted);
+  font-size: 12px;
+}
+.pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border-radius: 999px;
+  padding: 8px 11px;
+  background: rgba(17, 24, 39, 0.9);
+  border: 1px solid var(--line);
+  color: var(--muted);
+  font-size: 12px;
+}
+.status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+  background: var(--brand-2);
+}
+.content {
+  flex: 1;
+  padding: 0 16px 20px;
+}
+.card {
+  background: rgba(17, 24, 39, 0.92);
+  border: 1px solid var(--line);
+  border-radius: 18px;
+}
+.hero {
+  padding: 16px;
+  margin-bottom: 14px;
+}
+.hero h2 {
+  margin: 0 0 8px;
+  font-size: 18px;
+}
+.hero p {
+  margin: 0;
+  color: var(--muted);
+  line-height: 1.5;
+  font-size: 14px;
+}
+.hero-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-top: 14px;
+}
+.mini {
+  border-radius: 14px;
+  padding: 12px;
+  background: rgba(22, 32, 58, 0.78);
+}
+.mini strong {
+  display: block;
+  font-size: 13px;
+  margin-bottom: 6px;
+}
+.mini span {
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.4;
+}
+.messages {
+  padding: 14px;
+  display: grid;
+  gap: 12px;
+}
+.bubble {
+  border-radius: 16px;
+  padding: 12px 13px;
+  line-height: 1.45;
+  font-size: 14px;
+}
+.bubble.user {
+  background: rgba(139, 123, 255, 0.18);
+  border: 1px solid rgba(139, 123, 255, 0.24);
+}
+.bubble.assistant {
+  background: rgba(22, 32, 58, 0.9);
+  border: 1px solid var(--line);
+}
+.meta {
+  margin-top: 8px;
+  color: var(--muted);
+  font-size: 12px;
+}
+.composer-wrap {
+  position: sticky;
+  bottom: 0;
+  padding: 12px 16px 16px;
+  background: linear-gradient(180deg, rgba(11, 16, 32, 0), rgba(11, 16, 32, 0.95) 24%, rgba(11, 16, 32, 1));
+}
+.composer {
+  background: rgba(15, 23, 42, 0.96);
+  border: 1px solid var(--line);
+  border-radius: 20px;
+  padding: 14px;
+  backdrop-filter: blur(12px);
+}
+[data-chat-composer-form] textarea {
+  width: 100%;
+  min-height: 110px;
+  resize: none;
+  padding: 0;
+  margin: 0;
+  border: 0;
+  outline: none;
+  background: transparent;
+  color: var(--text);
+  font: inherit;
+}
+[data-chat-composer-form] textarea::placeholder {
+  color: #7f8aa5;
+}
+[data-chat-composer-footer] {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 12px;
+}
+button {
+  width: 44px;
+  height: 44px;
+  border: 0;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--text);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+}
+</style>
+</head>
+<body>
+<div class="page">
+  <div class="topbar">
+    <div class="brand">
+      <div class="logo">T3</div>
+      <div class="brand-copy">
+        <h1>T3 Code Mobile</h1>
+        <p>Browserless demo workspace</p>
+      </div>
+    </div>
+    <div class="pill"><span class="status-dot"></span> Connected</div>
+  </div>
+
+  <div class="content">
+    <section class="card hero">
+      <h2>Mobile Demo Workspace</h2>
+      <p>Use this screen for portfolio screenshots that show a clean, reliable, browserless T3 workflow on Android.</p>
+      <div class="hero-grid">
+        <div class="mini">
+          <strong>Current session</strong>
+          <span>Product launch cleanup for the mobile companion app.</span>
+        </div>
+        <div class="mini">
+          <strong>Network</strong>
+          <span>Tailscale private network · low-friction reconnect path.</span>
+        </div>
+      </div>
+    </section>
+
+    <section class="card messages">
+      <div class="bubble user">
+        Tighten the public GitHub positioning around lightweight, reliable mobile access.
+        <div class="meta">You · just now</div>
+      </div>
+      <div class="bubble assistant">
+        I updated the README hero, comparison notes, and release copy. The repo now leads with a clear promise: lightweight, browserless, reliability-first T3 on Android.
+        <div class="meta">T3 Code · ready</div>
+      </div>
+      <div class="bubble assistant">
+        The proxy health endpoint now reports upstream latency, and the screenshot/demo docs are aligned with the mobile-first positioning.
+        <div class="meta">T3 Code · verified</div>
+      </div>
+    </section>
+  </div>
+
+  <div class="composer-wrap">
+    <div class="composer">
+      <form data-chat-composer-form>
+        <textarea placeholder="Ask T3 Code to improve the mobile workflow…"></textarea>
+        <div data-chat-composer-footer>
+          <button type="button" aria-label="microphone">M</button>
+          <button type="button" aria-label="more actions">
+            <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true">
+              <circle cx="5" cy="12" r="2" fill="currentColor"></circle>
+              <circle cx="12" cy="12" r="2" fill="currentColor"></circle>
+              <circle cx="19" cy="12" r="2" fill="currentColor"></circle>
+            </svg>
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+</body>
+</html>

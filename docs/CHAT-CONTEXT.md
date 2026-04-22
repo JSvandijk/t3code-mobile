@@ -57,6 +57,19 @@ Then use these as needed:
 - The inline image upload button is expected to survive SPA navigation.
 - The proxy adds PWA assets, HTML injection, and `GET /__t3mobile/health`.
 
+## Project-Specific Working Rules
+
+These are not soft preferences. Treat them as operating rules for future chats working on this repo.
+
+- GitHub is the real end state. Work is not considered done until relevant changes are committed and pushed when the goal is GitHub-facing.
+- Do not treat documentation as proof. Prefer executable checks, runtime evidence, and direct verification over process documents.
+- Always do a clone-from-scratch mindset pass before calling work finished. Check tracked files, `.gitignore`, runtime file paths, and whether scripts depend on local-only or generated files.
+- Always do an adversarial pass after implementation. Look specifically for info disclosure, escaping failures, overbroad configuration, unsafe caching, unbounded buffering, and evidence mismatches.
+- Read code, docs, release notes, and audits against each other. If they disagree, the mismatch is a bug.
+- Remove or explain legacy files, dead code, deprecated platform patterns, and temporary paths. Do not let newer implementations coexist with stale older ones without a reason.
+- For security-sensitive changes, explicitly assume that a self-audit can miss issues introduced by the same authoring pass. Prefer external review or stronger verification when possible.
+- For release or evidence work, verify that the evidence matches the exact commit or tag being represented.
+
 ## Useful Commands
 
 ```bash
