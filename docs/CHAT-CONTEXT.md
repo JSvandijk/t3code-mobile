@@ -70,6 +70,18 @@ These are not soft preferences. Treat them as operating rules for future chats w
 - For security-sensitive changes, explicitly assume that a self-audit can miss issues introduced by the same authoring pass. Prefer external review or stronger verification when possible.
 - For release or evidence work, verify that the evidence matches the exact commit or tag being represented.
 
+## Known Failure Modes To Guard Against
+
+These are recurring failure patterns already seen on this project. Future chats should actively defend against them instead of treating them as abstract advice.
+
+- Same-pass contradiction: code, docs, and self-audit can all agree with each other while still being wrong. Treat self-authored audits as limited and try to falsify them.
+- Documentation-as-proof: a strong README, runbook, checklist, or evidence template does not prove runtime quality. Prefer runnable tests and direct verification.
+- Add-more-than-delete bias: the repo can look polished while still carrying dead files, stale paths, deprecated APIs, or unused legacy implementations.
+- Dirty-worktree blindness: do not assume local success means a clean clone works. Check tracked files, `.gitignore`, and runtime dependencies from a stranger's perspective.
+- Security theater risk: if a security document exists, verify the code actually upholds it and call out the limits of a self-audit explicitly.
+- Evidence drift: evidence captured for one SHA must not be casually described as proof for a later SHA unless the later commits are clearly non-runtime.
+- GitHub-first discipline: if the goal is public GitHub quality, local-only changes and local-only conclusions are incomplete work.
+
 ## Useful Commands
 
 ```bash
