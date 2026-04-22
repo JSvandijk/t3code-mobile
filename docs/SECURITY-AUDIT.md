@@ -1,8 +1,8 @@
 # Security Audit
 
-Audit date: April 21, 2026
+Last updated: April 22, 2026
 
-This document records the current security posture of `t3code-mobile`, the fixes applied in this pass, and the residual risks that still exist by design.
+This document records the current security posture of `t3code-mobile`, the fixes applied across audit passes, and the residual risks that still exist by design.
 
 ## Scope
 
@@ -176,6 +176,99 @@ What this repo should not claim:
 - hardened public-internet deployment
 - formal penetration-test certification
 - complete elimination of self-hosted risk
+
+## Second-Pass Security Changes (April 22, 2026)
+
+### 6. Health endpoint no longer leaks filesystem paths
+
+Previous behavior:
+
+- `/__t3mobile/health` returned the full filesystem paths to TLS key and certificate files
+
+Current behavior:
+
+- the endpoint returns `tls: { loaded: true }` instead of exposing internal paths
+
+### 7. Proxy error pages now use HTML escaping
+
+Previous behavior:
+
+- template literals inserted values directly into HTML without escaping
+
+Current behavior:
+
+- all dynamic values in error pages are HTML-escaped before insertion
+
+### 8. Content-Security-Policy header added
+
+Previous behavior:
+
+- no CSP header on proxy responses
+
+Current behavior:
+
+- the proxy now sends a `Content-Security-Policy` header on all responses
+
+### 9. Service worker caching restricted
+
+Previous behavior:
+
+- the service worker cached every successful same-origin GET response
+
+Current behavior:
+
+- only known static assets are cached (manifest, icons, SW)
+- API and navigation responses are not cached
+
+### 10. Decompression errors are handled explicitly
+
+Previous behavior:
+
+- decompression failures were silently ignored and raw bytes were served
+
+Current behavior:
+
+- a 502 error page is returned when upstream response decompression fails
+
+### 11. HTML response body size limit added
+
+Previous behavior:
+
+- no limit on buffered HTML responses for PWA injection
+
+Current behavior:
+
+- responses over 10 MB are passed through without injection
+
+### 12. WebView content access disabled
+
+Previous behavior:
+
+- `allowContentAccess(true)` allowed content:// URI resolution inside the WebView
+
+Current behavior:
+
+- `allowContentAccess(false)` prevents content provider access from loaded pages
+
+### 13. Static files cached at startup
+
+Previous behavior:
+
+- static files were read synchronously from disk on every request
+
+Current behavior:
+
+- static files are read once at startup and served from memory
+
+### 14. Health endpoint rate-limited via response caching
+
+Previous behavior:
+
+- every health request triggered an outbound upstream probe
+
+Current behavior:
+
+- health results are cached for 5 seconds to prevent probe amplification
 
 ## Recommended Next Security Steps
 

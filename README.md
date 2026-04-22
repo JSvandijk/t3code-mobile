@@ -119,7 +119,7 @@ Detailed instructions live in [INSTALLATION-GUIDE.md](INSTALLATION-GUIDE.md).
 - `manifest.json` and `sw.js`: installable PWA assets
 - `build-apk.bat`: Windows APK build script
 - `generate-icons.js`: icon generation helper
-- `tmp-webview-harness/`: static harness and English demo pages used by the local WebView server
+- `harness-pages/`: static harness and English demo pages used by the local WebView test server
 - `docs/`: comparison notes, publishing checklist, screenshots, and showcase docs
 
 If you are picking this project up in a new chat or after time away, read [docs/CHAT-CONTEXT.md](docs/CHAT-CONTEXT.md) first for the current handoff.
@@ -193,22 +193,20 @@ The proxy also exposes `GET /__t3mobile/health`, which returns JSON about the pr
 
 If you want the technical breakdown instead of the public pitch, read [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
 
-## Proof And Assets
+## Documentation
 
-- Public showcase notes: [docs/SHOWCASE.md](docs/SHOWCASE.md)
-- Screenshot and caption guide: [docs/SCREENSHOTS.md](docs/SCREENSHOTS.md)
-- Architecture overview: [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)
-- Local runtime harness: [docs/WEBVIEW-HARNESS.md](docs/WEBVIEW-HARNESS.md)
-- Runtime verification standard: [docs/RUNTIME-VERIFICATION.md](docs/RUNTIME-VERIFICATION.md)
-- Runtime evidence bundles: [docs/evidence/README.md](docs/evidence/README.md)
-- Release evidence template: [docs/evidence/RELEASE-EVIDENCE-TEMPLATE.md](docs/evidence/RELEASE-EVIDENCE-TEMPLATE.md)
-- Release runbook: [docs/RELEASE-RUNBOOK.md](docs/RELEASE-RUNBOOK.md)
-- Launch playbook: [docs/LAUNCH-PLAYBOOK.md](docs/LAUNCH-PLAYBOOK.md)
-- Starter issue ideas: [docs/STARTER-ISSUES.md](docs/STARTER-ISSUES.md)
-- Project comparison: [docs/COMPARISON.md](docs/COMPARISON.md)
-- Upstream-fit notes: [docs/UPSTREAM-FIT.md](docs/UPSTREAM-FIT.md)
-
-The goal is to make the public repo easy to evaluate: what problem it solves, what work was technically hard, what evidence exists, and where outside contributors can add value.
+| Area | Link |
+|------|------|
+| Architecture | [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) |
+| Runtime evidence | [docs/evidence/README.md](docs/evidence/README.md) |
+| Runtime verification | [docs/RUNTIME-VERIFICATION.md](docs/RUNTIME-VERIFICATION.md) |
+| Security audit | [docs/SECURITY-AUDIT.md](docs/SECURITY-AUDIT.md) |
+| WebView harness | [docs/WEBVIEW-HARNESS.md](docs/WEBVIEW-HARNESS.md) |
+| Release runbook | [docs/RELEASE-RUNBOOK.md](docs/RELEASE-RUNBOOK.md) |
+| Publishing checklist | [docs/PUBLISHING-CHECKLIST.md](docs/PUBLISHING-CHECKLIST.md) |
+| Showcase | [docs/SHOWCASE.md](docs/SHOWCASE.md) |
+| Comparison | [docs/COMPARISON.md](docs/COMPARISON.md) |
+| Starter issues | [docs/STARTER-ISSUES.md](docs/STARTER-ISSUES.md) |
 
 ## Security Notes
 
@@ -236,22 +234,11 @@ High-value contribution areas right now:
 - richer diagnostics for device-specific WebView failures
 - better onboarding docs and screenshots
 
-## Community And Support
+## Community
 
-- Support guide: [SUPPORT.md](SUPPORT.md)
-- Security policy: [SECURITY.md](SECURITY.md)
-- Code of conduct: [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md)
-- Showcase notes: [docs/SHOWCASE.md](docs/SHOWCASE.md)
-- Screenshot guide: [docs/SCREENSHOTS.md](docs/SCREENSHOTS.md)
-- WebView harness: [docs/WEBVIEW-HARNESS.md](docs/WEBVIEW-HARNESS.md)
-- Runtime verification standard: [docs/RUNTIME-VERIFICATION.md](docs/RUNTIME-VERIFICATION.md)
-- Runtime evidence bundles: [docs/evidence/README.md](docs/evidence/README.md)
-- Release runbook: [docs/RELEASE-RUNBOOK.md](docs/RELEASE-RUNBOOK.md)
-- Launch playbook: [docs/LAUNCH-PLAYBOOK.md](docs/LAUNCH-PLAYBOOK.md)
-- Starter issue ideas: [docs/STARTER-ISSUES.md](docs/STARTER-ISSUES.md)
-- Project comparison: [docs/COMPARISON.md](docs/COMPARISON.md)
-- Upstream-fit notes: [docs/UPSTREAM-FIT.md](docs/UPSTREAM-FIT.md)
-- Launch checklist: [docs/PUBLISHING-CHECKLIST.md](docs/PUBLISHING-CHECKLIST.md)
+- [SUPPORT.md](SUPPORT.md) — how to get help
+- [SECURITY.md](SECURITY.md) — vulnerability reporting
+- [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md)
 
 ## Status
 

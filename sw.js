@@ -1,5 +1,4 @@
-const STATIC_CACHE = 't3code-mobile-static-v3';
-const RUNTIME_CACHE = 't3code-mobile-runtime-v1';
+const STATIC_CACHE = 't3code-mobile-static-v4';
 const PRECACHE_URLS = ['/manifest.json', '/icon.svg', '/icon-192.png', '/icon-512.png'];
 
 function isCacheable(response) {
@@ -18,12 +17,17 @@ self.addEventListener('activate', (event) => {
     const cacheNames = await caches.keys();
     await Promise.all(
       cacheNames
-        .filter((cacheName) => ![STATIC_CACHE, RUNTIME_CACHE].includes(cacheName))
+        .filter((cacheName) => cacheName !== STATIC_CACHE)
         .map((cacheName) => caches.delete(cacheName))
     );
     await self.clients.claim();
   })());
 });
+
+const CACHEABLE_STATIC_PATHS = new Set([
+  ...PRECACHE_URLS,
+  '/sw.js',
+]);
 
 self.addEventListener('fetch', (event) => {
   if (event.request.method !== 'GET') {
@@ -35,9 +39,8 @@ self.addEventListener('fetch', (event) => {
       const requestUrl = new URL(event.request.url);
       const isSameOrigin = requestUrl.origin === self.location.origin;
       const staticCache = await caches.open(STATIC_CACHE);
-      const runtimeCache = await caches.open(RUNTIME_CACHE);
 
-      if (isSameOrigin && PRECACHE_URLS.includes(requestUrl.pathname)) {
+      if (isSameOrigin && CACHEABLE_STATIC_PATHS.has(requestUrl.pathname)) {
         const cached = await staticCache.match(event.request, { ignoreSearch: true });
         if (cached) {
           return cached;
@@ -46,17 +49,11 @@ self.addEventListener('fetch', (event) => {
 
       try {
         const response = await fetch(event.request);
-        if (isSameOrigin && isCacheable(response)) {
-          const targetCache = event.request.mode === 'navigate' ? runtimeCache : staticCache;
-          await targetCache.put(event.request, response.clone());
+        if (isSameOrigin && isCacheable(response) && CACHEABLE_STATIC_PATHS.has(requestUrl.pathname)) {
+          await staticCache.put(event.request, response.clone());
         }
         return response;
       } catch (error) {
-        const runtimeMatch = await runtimeCache.match(event.request);
-        if (runtimeMatch) {
-          return runtimeMatch;
-        }
-
         const staticMatch = await staticCache.match(event.request, { ignoreSearch: true });
         if (staticMatch) {
           return staticMatch;

@@ -26,7 +26,10 @@ import android.view.Gravity;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.Window;
+import android.view.WindowInsetsController;
 import android.view.WindowManager;
+import android.window.OnBackInvokedCallback;
+import android.window.OnBackInvokedDispatcher;
 import android.webkit.CookieManager;
 import android.webkit.PermissionRequest;
 import android.webkit.SslErrorHandler;
@@ -93,12 +96,28 @@ public class MainActivity extends Activity {
         super.onCreate(savedInstanceState);
 
         requestWindowFeature(Window.FEATURE_NO_TITLE);
-        getWindow().setFlags(
-            WindowManager.LayoutParams.FLAG_FULLSCREEN,
-            WindowManager.LayoutParams.FLAG_FULLSCREEN
-        );
         getWindow().setStatusBarColor(Color.parseColor("#161616"));
         getWindow().setNavigationBarColor(Color.parseColor("#161616"));
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            WindowInsetsController insetsController = getWindow().getInsetsController();
+            if (insetsController != null) {
+                insetsController.setSystemBarsBehavior(
+                    WindowInsetsController.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
+                );
+            }
+        } else {
+            getWindow().getDecorView().setSystemUiVisibility(
+                View.SYSTEM_UI_FLAG_LAYOUT_STABLE
+                | View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
+            );
+        }
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            getOnBackInvokedDispatcher().registerOnBackInvokedCallback(
+                OnBackInvokedDispatcher.PRIORITY_DEFAULT,
+                () -> handleBackNavigation()
+            );
+        }
 
         SharedPreferences prefs = getSharedPreferences(PREFS, MODE_PRIVATE);
         serverUrl = prefs.getString(KEY_URL, null);
@@ -281,7 +300,7 @@ public class MainActivity extends Activity {
             : WebSettings.MIXED_CONTENT_COMPATIBILITY_MODE
         );
         settings.setAllowFileAccess(false);
-        settings.setAllowContentAccess(true);
+        settings.setAllowContentAccess(false);
         settings.setJavaScriptCanOpenWindowsAutomatically(false);
         settings.setSupportMultipleWindows(false);
         settings.setUserAgentString(settings.getUserAgentString() + " T3CodeMobile/" + getAppVersionName());
@@ -458,10 +477,20 @@ public class MainActivity extends Activity {
 
                 Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
                 intent.addCategory(Intent.CATEGORY_OPENABLE);
-                intent.setType("image/*");
+                String mimeType = "*/*";
+                if (params != null && params.getAcceptTypes() != null) {
+                    String[] acceptTypes = params.getAcceptTypes();
+                    for (String type : acceptTypes) {
+                        if (type != null && !type.isEmpty()) {
+                            mimeType = type;
+                            break;
+                        }
+                    }
+                }
+                intent.setType(mimeType);
                 intent.putExtra(Intent.EXTRA_ALLOW_MULTIPLE, false);
 
-                Intent chooser = Intent.createChooser(intent, "Choose an image");
+                Intent chooser = Intent.createChooser(intent, "Choose a file");
                 startActivityForResult(chooser, FILE_PICKER_REQUEST);
                 return true;
             }
@@ -1480,13 +1509,20 @@ public class MainActivity extends Activity {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
     }
 
-    @Override
-    public void onBackPressed() {
+    private void handleBackNavigation() {
         if (webView != null && webView.canGoBack()) {
             webView.goBack();
         } else {
-            super.onBackPressed();
+            finish();
         }
+    }
+
+    @Override
+    @SuppressWarnings("deprecation")
+    public void onBackPressed() {
+        // Fallback for API < 33. On API 33+ the OnBackInvokedCallback
+        // registered in onCreate() handles back navigation instead.
+        handleBackNavigation();
     }
 
     @Override

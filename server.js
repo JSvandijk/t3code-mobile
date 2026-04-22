@@ -12,6 +12,17 @@ const resolveMaybeRelative = (targetPath) =>
   path.isAbsolute(targetPath) ? targetPath : repoPath(targetPath);
 const HEALTH_PATH = '/__t3mobile/health';
 const HEALTH_PROBE_TIMEOUT_MS = 5000;
+const HEALTH_CACHE_TTL_MS = 5000;
+const MAX_HTML_BODY_BYTES = 10 * 1024 * 1024;
+
+function escapeHtml(text) {
+  return String(text)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
 
 function failFast(message) {
   console.error(`[t3code-mobile] ${message}`);
@@ -81,6 +92,7 @@ const baseResponseHeaders = {
   'X-Content-Type-Options': 'nosniff',
   'Referrer-Policy': 'no-referrer',
   'X-Robots-Tag': 'noindex, nofollow',
+  'Content-Security-Policy': "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self' wss: ws:; font-src 'self'; frame-ancestors 'none'",
 };
 
 const writeHeaders = (res, statusCode, headers) => {
@@ -90,13 +102,26 @@ const writeHeaders = (res, statusCode, headers) => {
   });
 };
 
-const staticFiles = {
+const staticFileDefinitions = {
   '/manifest.json': { file: 'manifest.json', type: 'application/manifest+json', cacheControl: 'no-cache' },
   '/sw.js': { file: 'sw.js', type: 'application/javascript', cacheControl: 'no-store, must-revalidate' },
   '/icon.svg': { file: 'icon.svg', type: 'image/svg+xml', cacheControl: 'public, max-age=86400' },
   '/icon-192.png': { file: 'icon-192.png', type: 'image/png', cacheControl: 'public, max-age=86400' },
   '/icon-512.png': { file: 'icon-512.png', type: 'image/png', cacheControl: 'public, max-age=86400' },
 };
+
+const staticFiles = {};
+for (const [urlPath, def] of Object.entries(staticFileDefinitions)) {
+  try {
+    staticFiles[urlPath] = {
+      content: fs.readFileSync(path.join(__dirname, def.file)),
+      type: def.type,
+      cacheControl: def.cacheControl,
+    };
+  } catch (e) {
+    console.warn(`[t3code-mobile] Static file not found at startup: ${def.file}`);
+  }
+}
 
 const pwaInject = `
     <link rel="manifest" href="/manifest.json">
@@ -260,9 +285,9 @@ const renderProxyErrorPage = ({ statusCode, title, message }) => `<!doctype html
   </head>
   <body>
     <div class="card">
-      <h1>${title}</h1>
-      <p>${message}</p>
-      <div class="meta">HTTP ${statusCode}</div>
+      <h1>${escapeHtml(title)}</h1>
+      <p>${escapeHtml(message)}</p>
+      <div class="meta">HTTP ${escapeHtml(String(statusCode))}</div>
       <button onclick="location.reload()">Retry</button>
     </div>
   </body>
@@ -288,7 +313,16 @@ const sendProxyErrorResponse = (res, err) => {
   res.end(renderProxyErrorPage({ statusCode, title, message }));
 };
 
+let lastHealthResult = null;
+let lastHealthTimestamp = 0;
+
 const serveHealth = async (res) => {
+  const now = Date.now();
+  if (lastHealthResult && (now - lastHealthTimestamp) < HEALTH_CACHE_TTL_MS) {
+    sendJson(res, lastHealthResult.ok ? 200 : 503, lastHealthResult);
+    return;
+  }
+
   const upstream = await requestTarget(T3_TARGET);
   const payload = {
     ok: upstream.ok,
@@ -299,13 +333,12 @@ const serveHealth = async (res) => {
     timestamp: new Date().toISOString(),
     uptimeSeconds: Math.round(process.uptime()),
     upstreamTimeoutMs: UPSTREAM_TIMEOUT_MS,
-    tls: {
-      keyPath: SSL_KEY_PATH,
-      certPath: SSL_CERT_PATH,
-    },
+    tls: { loaded: true },
     upstream,
   };
 
+  lastHealthResult = payload;
+  lastHealthTimestamp = now;
   sendJson(res, upstream.ok ? 200 : 503, payload);
 };
 
@@ -331,14 +364,43 @@ proxy.on('proxyRes', (proxyRes, req, res) => {
 
   if (contentType.includes('text/html')) {
     const chunks = [];
-    proxyRes.on('data', (chunk) => chunks.push(chunk));
+    let totalBytes = 0;
+    let oversized = false;
+    proxyRes.on('data', (chunk) => {
+      totalBytes += chunk.length;
+      if (totalBytes > MAX_HTML_BODY_BYTES) {
+        oversized = true;
+      }
+      if (!oversized) {
+        chunks.push(chunk);
+      }
+    });
     proxyRes.on('end', () => {
+      if (oversized) {
+        if (encoding) headers['content-encoding'] = encoding;
+        writeHeaders(res, proxyRes.statusCode, headers);
+        res.end('<!-- response too large for PWA injection -->');
+        return;
+      }
+
       let buffer = Buffer.concat(chunks);
       try {
         if (encoding === 'gzip') buffer = zlib.gunzipSync(buffer);
         else if (encoding === 'br') buffer = zlib.brotliDecompressSync(buffer);
         else if (encoding === 'deflate') buffer = zlib.inflateSync(buffer);
-      } catch (e) { /* ignore */ }
+      } catch (decompressError) {
+        console.error(`[t3code-mobile] Failed to decompress upstream response: ${decompressError.message}`);
+        writeHeaders(res, 502, {
+          'Content-Type': 'text/html; charset=utf-8',
+          'Cache-Control': 'no-store, must-revalidate',
+        });
+        res.end(renderProxyErrorPage({
+          statusCode: 502,
+          title: 'Decompression failed',
+          message: 'The proxy could not decompress the upstream response. This may indicate a corrupted response from the T3 Code server.',
+        }));
+        return;
+      }
 
       let body = buffer.toString('utf-8');
       body = injectPwaMarkup(body);
@@ -378,13 +440,10 @@ const handler = (req, res) => {
   }
 
   if (staticFiles[urlPath]) {
-    const { file, type, cacheControl } = staticFiles[urlPath];
-    try {
-      const content = fs.readFileSync(path.join(__dirname, file));
-      writeHeaders(res, 200, { 'Content-Type': type, 'Cache-Control': cacheControl });
-      res.end(content);
-      return;
-    } catch (e) { /* fall through */ }
+    const { content, type, cacheControl } = staticFiles[urlPath];
+    writeHeaders(res, 200, { 'Content-Type': type, 'Cache-Control': cacheControl });
+    res.end(content);
+    return;
   }
   proxy.web(req, res);
 };
@@ -419,8 +478,7 @@ server.listen(HTTPS_PORT, '0.0.0.0', () => {
   console.log(`  Public URL: ${PUBLIC_URL}`);
   console.log(`  Target:     ${T3_TARGET}`);
   console.log(`  Timeout:    ${UPSTREAM_TIMEOUT_MS} ms`);
-  console.log(`  Key path:   ${SSL_KEY_PATH}`);
-  console.log(`  Cert path:  ${SSL_CERT_PATH}`);
+  console.log(`  TLS:        loaded`);
   console.log('  ==========================================');
   console.log('');
 });

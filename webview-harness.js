@@ -5,9 +5,9 @@ const path = require('path');
 const selfsigned = require('selfsigned');
 
 const repoPath = (targetPath) => path.resolve(__dirname, targetPath);
-const harnessHtml = fs.readFileSync(repoPath('tmp-webview-harness/index.html'), 'utf8');
-const demoWorkspaceHtml = fs.readFileSync(repoPath('tmp-webview-harness/demo-workspace.html'), 'utf8');
-const demoProjectsHtml = fs.readFileSync(repoPath('tmp-webview-harness/demo-projects.html'), 'utf8');
+const harnessHtml = fs.readFileSync(repoPath('harness-pages/index.html'), 'utf8');
+const demoWorkspaceHtml = fs.readFileSync(repoPath('harness-pages/demo-workspace.html'), 'utf8');
+const demoProjectsHtml = fs.readFileSync(repoPath('harness-pages/demo-projects.html'), 'utf8');
 
 const defaults = {
   'http': { protocol: 'http', port: 4888 },

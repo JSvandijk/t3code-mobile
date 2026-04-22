@@ -143,6 +143,10 @@ Interpretation:
 - the failure mode is explicit and user-readable
 - the overlay still exposes retry and diagnostics actions
 
+## Commit Applicability
+
+This evidence set was captured against commit `7b7680807bd97f06802fd98783096dd37223b673`. If commits after that SHA changed runtime-affecting code, this evidence does not cover the newer changes. Commits that only change documentation, CI, or repo metadata do not invalidate this set.
+
 ## Status Summary
 
 - Proven by emulator runtime evidence: connect screen, diagnostics path, pairing-link input acceptance, cleartext warning, base URL normalization, invalid HTTPS blocking

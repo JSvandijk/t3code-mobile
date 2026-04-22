@@ -1,4 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!--
+    Cleartext HTTP is allowed globally because this app connects to
+    user-specified self-hosted servers on arbitrary private IPs
+    (192.168.x.x, 10.x.x.x, 172.16-31.x.x, *.ts.net, etc.).
+    Android domain-config does not support IP ranges, so restricting
+    cleartext by domain is not practical for this use case.
+
+    The actual cleartext safety control is the app-level warning dialog
+    shown before every HTTP session (see MainActivity.showCleartextWarningDialog).
+-->
 <network-security-config>
     <base-config cleartextTrafficPermitted="true">
         <trust-anchors>
