@@ -5,6 +5,7 @@ const zlib = require('zlib');
 const fs = require('fs');
 const path = require('path');
 const pkg = require('./package.json');
+const { escapeHtml, injectBeforeHeadClose } = require('./lib/html');
 
 const repoPath = (targetPath) => path.resolve(__dirname, targetPath);
 const fromEnvOrDefault = (name, fallback) => process.env[name] || fallback;
@@ -14,15 +15,6 @@ const HEALTH_PATH = '/__t3mobile/health';
 const HEALTH_PROBE_TIMEOUT_MS = 5000;
 const HEALTH_CACHE_TTL_MS = 5000;
 const MAX_HTML_BODY_BYTES = 10 * 1024 * 1024;
-
-function escapeHtml(text) {
-  return String(text)
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#39;');
-}
 
 function failFast(message) {
   console.error(`[t3code-mobile] ${message}`);
@@ -147,20 +139,7 @@ const pwaInject = `
     </script>
 `;
 
-const HEAD_CLOSE_RE = /<\/head\s*>/i;
-
-const injectPwaMarkup = (html) => {
-  if (HEAD_CLOSE_RE.test(html)) {
-    return html.replace(HEAD_CLOSE_RE, `${pwaInject}\n</head>`);
-  }
-
-  const bodyIndex = html.search(/<body[\s>]/i);
-  if (bodyIndex !== -1) {
-    return `${html.slice(0, bodyIndex)}${pwaInject}\n${html.slice(bodyIndex)}`;
-  }
-
-  return `${pwaInject}\n${html}`;
-};
+const injectPwaMarkup = (html) => injectBeforeHeadClose(html, pwaInject);
 
 const proxy = httpProxy.createProxyServer({
   target: T3_TARGET,

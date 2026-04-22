@@ -70,8 +70,8 @@
   <path d="M755 490H830" stroke="#355C7D" stroke-width="8" stroke-linecap="round" marker-end="url(#arrow)"/>
   <path d="M605 340V375" stroke="#355C7D" stroke-width="8" stroke-linecap="round" marker-end="url(#arrow)"/>
 
-  <text x="374" y="278" fill="#355C7D" font-family="Segoe UI, Arial, sans-serif" font-size="16" font-weight="600">loads / scopes</text>
-  <text x="764" y="232" fill="#355C7D" font-family="Segoe UI, Arial, sans-serif" font-size="16" font-weight="600">runtime proof</text>
-  <text x="764" y="472" fill="#355C7D" font-family="Segoe UI, Arial, sans-serif" font-size="16" font-weight="600">proxy proof</text>
-  <text x="620" y="366" fill="#355C7D" font-family="Segoe UI, Arial, sans-serif" font-size="16" font-weight="600">optional</text>
+  <text x="397" y="280" fill="#355C7D" font-family="Segoe UI, Arial, sans-serif" font-size="14" font-weight="600" text-anchor="middle">loads / scopes</text>
+  <text x="792" y="235" fill="#355C7D" font-family="Segoe UI, Arial, sans-serif" font-size="14" font-weight="600" text-anchor="middle">runtime proof</text>
+  <text x="792" y="475" fill="#355C7D" font-family="Segoe UI, Arial, sans-serif" font-size="14" font-weight="600" text-anchor="middle">proxy proof</text>
+  <text x="625" y="362" fill="#355C7D" font-family="Segoe UI, Arial, sans-serif" font-size="14" font-weight="600">optional</text>
 </svg>

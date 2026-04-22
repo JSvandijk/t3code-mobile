@@ -145,7 +145,7 @@ Interpretation:
 
 ## Commit Applicability
 
-This evidence set was captured against commit `7b7680807bd97f06802fd98783096dd37223b673`. If commits after that SHA changed runtime-affecting code, this evidence does not cover the newer changes. Commits that only change documentation, CI, or repo metadata do not invalidate this set.
+This evidence set was captured against commit `7b7680807bd97f06802fd98783096dd37223b673`. Commits after that SHA added security hardening (CSP headers, HTML escaping, response limits, service worker cache restrictions, deprecated API replacements, ESLint, and unit tests). Those changes improve security and code quality but were not re-captured in this emulator evidence set. The screenshots and UI dumps here represent the pre-hardening runtime state. Automated checks below reflect the post-hardening test output.
 
 ## Status Summary
 

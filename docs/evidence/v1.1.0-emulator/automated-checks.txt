@@ -1,10 +1,14 @@
 
 > t3code-mobile@1.1.0 test
-> npm run check:js && npm run check:manifest && npm run check:repo && npm run test:proxy
+> npm run check:js && npm run lint && npm run check:manifest && npm run check:repo && npm run test:units && npm run test:proxy
 
 
 > t3code-mobile@1.1.0 check:js
-> node --check server.js && node --check generate-icons.js && node --check sw.js && node --check check-release.js && node --check smoke-proxy.js && node --check webview-harness.js
+> node --check server.js && node --check generate-icons.js && node --check sw.js && node --check check-release.js && node --check smoke-proxy.js && node --check webview-harness.js && node --check lib/html.js && node --check test/test-html.js
+
+
+> t3code-mobile@1.1.0 lint
+> eslint server.js smoke-proxy.js check-release.js webview-harness.js generate-icons.js sw.js lib/html.js test/test-html.js
 
 
 > t3code-mobile@1.1.0 check:manifest
@@ -16,6 +20,11 @@ manifest.json OK
 > node check-release.js
 
 release checks OK for version 1.1.0
+
+> t3code-mobile@1.1.0 test:units
+> node test/test-html.js
+
+html tests OK (18 passed)
 
 > t3code-mobile@1.1.0 test:proxy
 > node smoke-proxy.js

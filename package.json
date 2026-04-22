@@ -7,8 +7,8 @@
     "start": "node server.js",
     "build:apk": "build-apk.bat",
     "generate:icons": "node generate-icons.js",
-    "check:js": "node --check server.js && node --check generate-icons.js && node --check sw.js && node --check check-release.js && node --check smoke-proxy.js && node --check webview-harness.js",
-    "lint": "eslint server.js smoke-proxy.js check-release.js webview-harness.js generate-icons.js sw.js",
+    "check:js": "node --check server.js && node --check generate-icons.js && node --check sw.js && node --check check-release.js && node --check smoke-proxy.js && node --check webview-harness.js && node --check lib/html.js && node --check test/test-html.js",
+    "lint": "eslint server.js smoke-proxy.js check-release.js webview-harness.js generate-icons.js sw.js lib/html.js test/test-html.js",
     "check:manifest": "node -e \"JSON.parse(require('fs').readFileSync('manifest.json', 'utf8')); console.log('manifest.json OK')\"",
     "check:repo": "node check-release.js",
     "check:release": "npm run check:repo",
@@ -16,7 +16,8 @@
     "harness:http": "node webview-harness.js --mode=http",
     "harness:https-bad-cert": "node webview-harness.js --mode=https-bad-cert",
     "harness:redirect": "node webview-harness.js --mode=redirect",
-    "test": "npm run check:js && npm run lint && npm run check:manifest && npm run check:repo && npm run test:proxy"
+    "test:units": "node test/test-html.js",
+    "test": "npm run check:js && npm run lint && npm run check:manifest && npm run check:repo && npm run test:units && npm run test:proxy"
   },
   "keywords": [
     "t3-code",

@@ -31,7 +31,8 @@ Built by ChatGPT 5.4, reviewed by Claude Opus.
 ## Useful Commands
 
 ```bash
-npm test                          # full test suite (syntax + lint + manifest + repo checks + proxy smoke)
+npm test                          # full test suite (syntax + lint + manifest + repo checks + unit tests + proxy smoke)
+npm run test:units                # unit tests only (lib/html.js)
 npm run harness:http              # local WebView test server (HTTP)
 npm run harness:https-bad-cert    # local WebView test server (bad cert)
 npm run harness:redirect          # local WebView test server (redirect)
