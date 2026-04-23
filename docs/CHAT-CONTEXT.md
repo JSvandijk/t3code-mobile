@@ -7,9 +7,9 @@ This file exists so a new chat or contributor can recover the important project 
 - Repository: `JSvandijk/t3code-mobile`
 - Default branch: `main`
 - Current public version in `package.json`: `1.1.0`
-- Verified on April 21, 2026: local `main` and `origin/main` were brought back to the same commit and the worktree was clean.
-- Current synced `HEAD`: `9104962a1cad351d3f0f2028eb9682aba4fc6870`
-- Required GitHub checks on that commit were green on April 21, 2026: `node-checks` and `android-build`
+- Verified on April 23, 2026: local `main` and `origin/main` are in sync and the worktree is clean.
+- Current synced `HEAD`: `56f29cdcebbe8f4b2ea5a9962f26f9c99fa7ead5`
+- iPhone PWA support was added on this date (HTTP proxy mode, IPHONE-GUIDE.md). Status: untested on real device.
 
 ## What Changed In The Latest Cleanup
 
@@ -120,7 +120,7 @@ docs/PUBLISHING-CHECKLIST.md and docs/MAINTAINER-SETUP.md
 If another model such as Opus is reviewing this repo, it should assume the repo state below unless the working tree shows otherwise:
 
 - local `main` and GitHub `origin/main` were synced
-- the latest documented synced commit in this handoff was `9104962a1cad351d3f0f2028eb9682aba4fc6870`
+- the latest documented synced commit in this handoff was `56f29cdcebbe8f4b2ea5a9962f26f9c99fa7ead5`
 - the required GitHub checks for that synced state were green
 - prior conversation history is not available and should not be assumed
 

@@ -239,7 +239,7 @@ Then restart the proxy.
 - Fullscreen T3 Code on your iPhone, no browser chrome
 - Home screen icon that looks and opens like a native app
 - Notch and safe area support for iPhone models with the Dynamic Island or notch
-- Offline splash screen via service worker
+- Static assets cached via service worker (icons, manifest; the T3 Code UI itself is not cached offline)
 - Smooth scrolling with bounce prevention
 - Navigation stays inside the app (external links open in Safari)
 
@@ -255,6 +255,6 @@ Differences:
 | Runs without browser | Yes (WebView) | Yes (Safari standalone) |
 | Custom image upload button | Yes | No (use T3 Code built-in) |
 | Connection diagnostics | Yes (in-app) | No |
-| Offline support | No | Yes (service worker) |
+| Offline support | No | Static assets only (icons, manifest) |
 | Requires proxy | No | Yes |
 | Requires Tailscale | Recommended | Required (for HTTPS) |

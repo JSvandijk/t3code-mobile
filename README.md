@@ -10,7 +10,7 @@ An unofficial Android and iPhone companion app with optional HTTPS/PWA proxy for
 
 > The lightweight, browserless, reliability-first way to use T3 Code on your phone.
 
-`t3code-mobile` is built for one specific job: make your own T3 Code session usable from your phone with the least possible setup friction. On Android, it wraps T3 Code in a fullscreen WebView with an inline photo upload shortcut. On iPhone, it runs as a fullscreen Progressive Web App through Safari with home screen integration, notch support, and offline caching.
+`t3code-mobile` is built for one specific job: make your own T3 Code session usable from your phone with the least possible setup friction. On Android, it wraps T3 Code in a fullscreen WebView with an inline photo upload shortcut. On iPhone, it runs as a fullscreen Progressive Web App through Safari with home screen integration and notch support.
 
 The pitch is simple: reliable, browserless, lightweight T3 access on your phone. This repo does not try to become a heavy mobile control plane. It tries to be the cleanest and most dependable way to use your existing T3 Code session from a phone.
 

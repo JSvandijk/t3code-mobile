@@ -192,7 +192,6 @@ const requestTarget = (targetUrl) => new Promise((resolve) => {
   const url = new URL(targetUrl);
   const client = url.protocol === 'https:' ? https : http;
   const startedAt = Date.now();
-  let previewBytes = 0;
   const request = client.request(url, {
     method: 'GET',
     timeout: Math.min(UPSTREAM_TIMEOUT_MS, HEALTH_PROBE_TIMEOUT_MS),
@@ -202,23 +201,12 @@ const requestTarget = (targetUrl) => new Promise((resolve) => {
       'User-Agent': `t3code-mobile-health/${pkg.version}`,
     },
   }, (response) => {
-    const chunks = [];
-    response.on('data', (chunk) => {
-      if (previewBytes < 512) {
-        const remaining = 512 - previewBytes;
-        const chunkSlice = chunk.subarray(0, remaining);
-        chunks.push(chunkSlice);
-        previewBytes += chunkSlice.length;
-      }
-    });
+    response.on('data', () => {});
     response.on('end', () => {
-      const preview = Buffer.concat(chunks).toString('utf8').replace(/\s+/g, ' ').trim().slice(0, 200);
       resolve({
         ok: response.statusCode >= 200 && response.statusCode < 400,
         durationMs: Date.now() - startedAt,
         statusCode: response.statusCode,
-        contentType: response.headers['content-type'] || null,
-        preview,
         timeoutMs: Math.min(UPSTREAM_TIMEOUT_MS, HEALTH_PROBE_TIMEOUT_MS),
       });
     });
@@ -230,8 +218,6 @@ const requestTarget = (targetUrl) => new Promise((resolve) => {
       ok: false,
       durationMs: Date.now() - startedAt,
       statusCode: null,
-      contentType: null,
-      preview: '',
       error: error.message,
       timeoutMs: Math.min(UPSTREAM_TIMEOUT_MS, HEALTH_PROBE_TIMEOUT_MS),
     });
@@ -343,10 +329,7 @@ const serveHealth = async (res) => {
     ok: upstream.ok,
     service: 't3code-mobile-proxy',
     version: pkg.version,
-    publicUrl: PUBLIC_URL,
-    target: T3_TARGET,
     timestamp: new Date().toISOString(),
-    uptimeSeconds: Math.round(process.uptime()),
     upstreamTimeoutMs: UPSTREAM_TIMEOUT_MS,
     tls: PROXY_HTTP ? { loaded: false, mode: 'http' } : { loaded: true },
     upstream,
@@ -383,18 +366,24 @@ proxy.on('proxyRes', (proxyRes, req, res) => {
     let oversized = false;
     proxyRes.on('data', (chunk) => {
       totalBytes += chunk.length;
-      if (totalBytes > MAX_HTML_BODY_BYTES) {
+      if (totalBytes > MAX_HTML_BODY_BYTES && !oversized) {
         oversized = true;
+        if (encoding) headers['content-encoding'] = encoding;
+        writeHeaders(res, proxyRes.statusCode, headers);
+        for (const buffered of chunks) {
+          res.write(buffered);
+        }
+        chunks.length = 0;
       }
-      if (!oversized) {
+      if (oversized) {
+        res.write(chunk);
+      } else {
         chunks.push(chunk);
       }
     });
     proxyRes.on('end', () => {
       if (oversized) {
-        if (encoding) headers['content-encoding'] = encoding;
-        writeHeaders(res, proxyRes.statusCode, headers);
-        res.end('<!-- response too large for PWA injection -->');
+        res.end();
         return;
       }
 
