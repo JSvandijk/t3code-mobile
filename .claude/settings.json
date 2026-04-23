@@ -6,7 +6,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "echo 'IMPORTANT: CLAUDE.md rules are active. ALWAYS say CLAUDE.md loaded at the start. ALWAYS run npm test before calling work done. NEVER skip the quality gate in AGENTS.md.'"
+            "command": "echo 'IMPORTANT: Re-read CLAUDE.md from the project root NOW and follow all rules. ALWAYS say CLAUDE.md loaded. NEVER skip verification.'"
           }
         ]
       }
