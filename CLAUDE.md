@@ -63,3 +63,5 @@ Windows APK build: `build-apk.bat`
 This project was built primarily by ChatGPT 5.4 and reviewed by Claude Opus.
 The owner (Jesse) uses this as a comparative evaluation of AI code quality.
 Be honest, strict, and accurate in all assessments.
+
+@AGENTS.md
