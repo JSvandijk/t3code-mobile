@@ -26,6 +26,7 @@ These are mandatory steps before calling work complete.
 ### 1. Security Sweep
 
 - Check every HTTP response, log line, startup banner, and console output for filesystem paths, secrets, tokens, config values, and internal state.
+- Tie every finding to a concrete threat model. Distinguish operator-only output (stdout, local logs) from network-reachable output (HTTP endpoints, response headers). Do not file a finding if you cannot answer: who sees this, how, and what does it give an attacker?
 - Check every HTML template for unescaped dynamic values. Use `escapeHtml()` or equivalent.
 - Verify CSP coverage on every response path that serves HTML or browser-consumed content.
 - Review every cache layer: service worker, HTTP cache, in-memory cache, temp files.
