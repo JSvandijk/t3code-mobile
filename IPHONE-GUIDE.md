@@ -26,7 +26,7 @@ PWA Proxy (this repo, HTTP mode, port 3780)
 T3 Code Alpha (port 3773)
 ```
 
-The PWA proxy wraps T3 Code with the metadata Safari needs to treat it as a home screen app: fullscreen display, a home screen icon, safe area padding for the notch, and offline-ready caching.
+The PWA proxy wraps T3 Code with the metadata Safari needs to treat it as a home screen app: fullscreen display, a home screen icon, safe area padding for the notch, and static asset caching (icons, manifest).
 
 Tailscale Serve provides the HTTPS layer with real certificates so Safari trusts the connection without warnings.
 
@@ -170,6 +170,8 @@ Once set up, the daily workflow is:
 2. Make sure the proxy is running (`npm run start:iphone` in the t3code-mobile directory).
 3. Make sure Tailscale is connected on both devices.
 4. Open the T3 Code app from your iPhone home screen.
+
+**Important:** Your Mac must stay awake while you use the iPhone app. If your Mac goes to sleep, the proxy stops responding and the app will show a connection error. On macOS you can prevent sleep temporarily with `caffeinate -d` in a terminal, or adjust Energy Saver settings.
 
 If you want the proxy to start automatically when you log in, you can add it as a login item or use a launchd plist on macOS.
 
