@@ -1,7 +1,7 @@
 {
   "name": "t3code-mobile",
   "version": "1.1.0",
-  "description": "Unofficial Android companion and optional HTTPS PWA proxy for T3 Code.",
+  "description": "Unofficial Android and iPhone companion app with optional HTTPS/PWA proxy for T3 Code.",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
@@ -13,6 +13,7 @@
     "check:repo": "node check-release.js",
     "check:release": "npm run check:repo",
     "test:proxy": "node smoke-proxy.js",
+    "start:iphone": "node server.js --http",
     "harness:http": "node webview-harness.js --mode=http",
     "harness:https-bad-cert": "node webview-harness.js --mode=https-bad-cert",
     "harness:redirect": "node webview-harness.js --mode=redirect",

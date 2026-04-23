@@ -65,12 +65,17 @@ function loadTlsCredentials(keyPath, certPath) {
   }
 }
 
-const HTTPS_PORT = parseIntegerEnv('HTTPS_PORT', 3780, 1);
+const PROXY_HTTP = process.argv.includes('--http') || fromEnvOrDefault('PROXY_HTTP', 'false') === 'true';
+const LISTEN_PORT = parseIntegerEnv(PROXY_HTTP ? 'HTTP_PORT' : 'HTTPS_PORT', 3780, 1);
 const T3_TARGET_URL = parseUrlEnv('T3_TARGET', 'http://127.0.0.1:3773', ['http:', 'https:']);
 const T3_TARGET = T3_TARGET_URL.toString();
-const PUBLIC_URL = parseUrlEnv('PUBLIC_URL', `https://localhost:${HTTPS_PORT}`, ['https:']).toString();
-const SSL_KEY_PATH = resolveMaybeRelative(fromEnvOrDefault('SSL_KEY_PATH', './key.pem'));
-const SSL_CERT_PATH = resolveMaybeRelative(fromEnvOrDefault('SSL_CERT_PATH', './cert.pem'));
+const PUBLIC_URL = parseUrlEnv(
+  'PUBLIC_URL',
+  `${PROXY_HTTP ? 'http' : 'https'}://localhost:${LISTEN_PORT}`,
+  PROXY_HTTP ? ['http:', 'https:'] : ['https:'],
+).toString();
+const SSL_KEY_PATH = PROXY_HTTP ? null : resolveMaybeRelative(fromEnvOrDefault('SSL_KEY_PATH', './key.pem'));
+const SSL_CERT_PATH = PROXY_HTTP ? null : resolveMaybeRelative(fromEnvOrDefault('SSL_CERT_PATH', './cert.pem'));
 const UPSTREAM_TIMEOUT_MS = parseIntegerEnv('UPSTREAM_TIMEOUT_MS', 15000, 100);
 const upstreamUrl = T3_TARGET_URL;
 const upstreamAgent = upstreamUrl.protocol === 'https:'
@@ -78,7 +83,7 @@ const upstreamAgent = upstreamUrl.protocol === 'https:'
   : new http.Agent({ keepAlive: true });
 const healthHttpAgent = new http.Agent({ keepAlive: true });
 const healthHttpsAgent = new https.Agent({ keepAlive: true });
-const sslOptions = loadTlsCredentials(SSL_KEY_PATH, SSL_CERT_PATH);
+const sslOptions = PROXY_HTTP ? null : loadTlsCredentials(SSL_KEY_PATH, SSL_CERT_PATH);
 const baseResponseHeaders = {
   'X-T3Mobile-Proxy': pkg.version,
   'X-Content-Type-Options': 'nosniff',
@@ -124,13 +129,44 @@ const pwaInject = `
     <link rel="apple-touch-icon" href="/icon-192.png">
     <meta name="mobile-web-app-capable" content="yes">
     <style>
-      html, body { overscroll-behavior: none; }
+      html, body { overscroll-behavior: none; -webkit-overflow-scrolling: touch; }
       body {
         padding-top: env(safe-area-inset-top);
         padding-bottom: env(safe-area-inset-bottom);
+        padding-left: env(safe-area-inset-left);
+        padding-right: env(safe-area-inset-right);
       }
     </style>
     <script>
+      (function() {
+        var vp = document.querySelector('meta[name="viewport"]');
+        if (vp) {
+          var c = vp.getAttribute('content') || '';
+          if (c.indexOf('viewport-fit') === -1) {
+            vp.setAttribute('content', c + ', viewport-fit=cover');
+          }
+        } else {
+          var m = document.createElement('meta');
+          m.name = 'viewport';
+          m.content = 'width=device-width, initial-scale=1, viewport-fit=cover';
+          document.head.appendChild(m);
+        }
+      })();
+      if (window.navigator.standalone) {
+        document.addEventListener('click', function(e) {
+          var node = e.target;
+          while (node && node.tagName !== 'A') node = node.parentNode;
+          if (node && node.href) {
+            try {
+              var url = new URL(node.href, location.href);
+              if (url.origin === location.origin) {
+                e.preventDefault();
+                location.href = node.href;
+              }
+            } catch (ignored) {}
+          }
+        });
+      }
       if ('serviceWorker' in navigator) {
         navigator.serviceWorker.register('/sw.js')
           .then(() => console.log('[PWA] SW OK'))
@@ -312,7 +348,7 @@ const serveHealth = async (res) => {
     timestamp: new Date().toISOString(),
     uptimeSeconds: Math.round(process.uptime()),
     upstreamTimeoutMs: UPSTREAM_TIMEOUT_MS,
-    tls: { loaded: true },
+    tls: PROXY_HTTP ? { loaded: false, mode: 'http' } : { loaded: true },
     upstream,
   };
 
@@ -427,7 +463,9 @@ const handler = (req, res) => {
   proxy.web(req, res);
 };
 
-const server = https.createServer(sslOptions, handler);
+const server = PROXY_HTTP
+  ? http.createServer(handler)
+  : https.createServer(sslOptions, handler);
 server.requestTimeout = UPSTREAM_TIMEOUT_MS + 5000;
 server.headersTimeout = UPSTREAM_TIMEOUT_MS + 10000;
 server.keepAliveTimeout = 5000;
@@ -449,15 +487,15 @@ const shutdown = (signal) => {
 process.on('SIGINT', () => shutdown('SIGINT'));
 process.on('SIGTERM', () => shutdown('SIGTERM'));
 
-server.listen(HTTPS_PORT, '0.0.0.0', () => {
+server.listen(LISTEN_PORT, '0.0.0.0', () => {
   console.log('');
   console.log('  ==========================================');
-  console.log('  T3 Code Mobile PWA Proxy');
+  console.log(`  T3 Code Mobile PWA Proxy${PROXY_HTTP ? ' (HTTP)' : ''}`);
   console.log('  ==========================================');
   console.log(`  Public URL: ${PUBLIC_URL}`);
   console.log(`  Target:     ${T3_TARGET}`);
   console.log(`  Timeout:    ${UPSTREAM_TIMEOUT_MS} ms`);
-  console.log(`  TLS:        loaded`);
+  console.log(`  TLS:        ${PROXY_HTTP ? 'disabled (use behind Tailscale Serve or HTTPS proxy)' : 'loaded'}`);
   console.log('  ==========================================');
   console.log('');
 });

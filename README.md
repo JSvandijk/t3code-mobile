@@ -3,15 +3,16 @@
 [![CI](https://github.com/JSvandijk/t3code-mobile/actions/workflows/ci.yml/badge.svg)](https://github.com/JSvandijk/t3code-mobile/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/license-MIT-0f172a.svg)](LICENSE)
 [![Platform: Android](https://img.shields.io/badge/platform-Android-6C63FF.svg)](#installation)
+[![Platform: iPhone PWA](https://img.shields.io/badge/platform-iPhone%20PWA-000000.svg)](IPHONE-GUIDE.md)
 [![Network: Tailscale-friendly](https://img.shields.io/badge/network-Tailscale--friendly-57d6c4.svg)](INSTALLATION-GUIDE.md)
 
-An unofficial Android companion app and optional HTTPS/PWA proxy for [T3 Code](https://github.com/pingdotgg/t3code).
+An unofficial Android and iPhone companion app with optional HTTPS/PWA proxy for [T3 Code](https://github.com/pingdotgg/t3code).
 
-> The lightweight, browserless, reliability-first way to use T3 Code on Android.
+> The lightweight, browserless, reliability-first way to use T3 Code on your phone.
 
-`t3code-mobile` is built for one specific job: make your own T3 Code session usable from your phone with the least possible setup friction. It wraps a local T3 Code desktop instance in a fullscreen Android WebView, remembers the server URL, and keeps an inline photo upload shortcut available inside the chat composer.
+`t3code-mobile` is built for one specific job: make your own T3 Code session usable from your phone with the least possible setup friction. On Android, it wraps T3 Code in a fullscreen WebView with an inline photo upload shortcut. On iPhone, it runs as a fullscreen Progressive Web App through Safari with home screen integration, notch support, and offline caching.
 
-The pitch is simple: reliable, browserless, lightweight T3 access on Android. This repo does not try to become a heavy mobile control plane. It tries to be the cleanest and most dependable way to use your existing T3 Code session from a phone.
+The pitch is simple: reliable, browserless, lightweight T3 access on your phone. This repo does not try to become a heavy mobile control plane. It tries to be the cleanest and most dependable way to use your existing T3 Code session from a phone.
 
 ## Why It Stands Out
 
@@ -29,7 +30,7 @@ The pitch is simple: reliable, browserless, lightweight T3 access on Android. Th
 
 ## At A Glance
 
-- Browserless Android experience with no visible URL bar or browser chrome
+- Browserless experience on Android (native WebView) and iPhone (fullscreen PWA)
 - Lightweight companion scope instead of a broader remote-agent dashboard
 - Reliability-first behavior: diagnostics, scoped navigation, smoke tests, and visible failure handling
 - Fast self-hosted phone access over Tailscale or a trusted local network
@@ -77,6 +78,7 @@ If another T3 user or contributor opens this repo, they should be able to see bo
 ## What You Get
 
 - Native Android WebView wrapper with no browser chrome
+- iPhone and iPad support via fullscreen PWA with home screen integration
 - One-time base URL setup with reconnect support
 - Full pairing links can be pasted; the app extracts and saves only the base URL
 - In-app menu for reload, connection info, and changing the saved server
@@ -84,6 +86,7 @@ If another T3 user or contributor opens this repo, they should be able to see bo
 - Persistent inline image upload button next to the composer controls
 - MutationObserver-based reinjection so the upload button survives SPA navigation
 - Optional HTTPS reverse proxy that adds a manifest, service worker, installable PWA behavior, and a health endpoint
+- HTTP mode for the proxy when running behind Tailscale Serve or another HTTPS reverse proxy
 - Portable local WebView harness for HTTP, invalid-HTTPS, and redirect testing
 - Windows-friendly APK build flow without needing a full Gradle project workflow
 - Proxy smoke test that verifies HTML injection, static assets, and the proxy health endpoint
@@ -102,6 +105,8 @@ If another T3 user or contributor opens this repo, they should be able to see bo
 
 ## Quick Start
 
+### Android
+
 1. Install Tailscale on your computer and Android phone.
 2. Open T3 Code on your computer.
 3. In T3 Code, go to `Settings` -> `Connections` -> `Create Link`.
@@ -109,7 +114,15 @@ If another T3 user or contributor opens this repo, they should be able to see bo
 5. Enter your base URL, for example `http://your-t3-host:3773`.
 6. Complete the standard pairing flow using the token from the desktop app.
 
-Detailed instructions live in [INSTALLATION-GUIDE.md](INSTALLATION-GUIDE.md).
+### iPhone
+
+1. Install Tailscale on your computer and iPhone.
+2. Start the PWA proxy: `npm run start:iphone`
+3. Expose via Tailscale: `tailscale serve https / http://localhost:3780`
+4. Open `https://your-machine.tailnet.ts.net` in Safari on your iPhone.
+5. Tap Share -> Add to Home Screen.
+
+Detailed instructions: [INSTALLATION-GUIDE.md](INSTALLATION-GUIDE.md) (Android) | [IPHONE-GUIDE.md](IPHONE-GUIDE.md) (iPhone)
 
 ## Project Layout
 
@@ -243,6 +256,9 @@ High-value contribution areas right now:
 ## Status
 
 This repo is public and usable today, but still early. The current priority is reliability, better onboarding, and making it easy for outside contributors to help without having to reverse-engineer the codebase.
+
+- **Android**: tested on real devices and emulators. Considered stable for daily use.
+- **iPhone (PWA)**: proxy code passes all automated tests and follows Apple's PWA specifications, but has not yet been verified on a real iPhone. Treat it as an early preview until confirmed working on-device.
 
 Android runtime verification is intentionally split into automated repo gates and explicit Android-side evidence capture. The exact proof required for public releases now lives in [docs/RUNTIME-VERIFICATION.md](docs/RUNTIME-VERIFICATION.md), and the release bar itself is documented in [docs/RELEASE-RUNBOOK.md](docs/RELEASE-RUNBOOK.md).
 

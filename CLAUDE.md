@@ -5,8 +5,8 @@ It exists because conversation history does NOT persist between sessions.
 
 ## What This Repo Is
 
-`t3code-mobile` is an unofficial Android companion app + optional HTTPS/PWA proxy for T3 Code.
-Two deliverables: native Android WebView wrapper (`apk/`) and HTTPS proxy (`server.js`).
+`t3code-mobile` is an unofficial Android and iPhone companion app + optional HTTPS/PWA proxy for T3 Code.
+Three deliverables: native Android WebView wrapper (`apk/`), iPhone PWA via proxy (`IPHONE-GUIDE.md`), and HTTPS proxy (`server.js`).
 Built by ChatGPT 5.4, reviewed by Claude Opus.
 
 ## Current State
@@ -21,12 +21,13 @@ Built by ChatGPT 5.4, reviewed by Claude Opus.
 1. `README.md` — public-facing overview
 2. `docs/CHAT-CONTEXT.md` — operational handoff with rules and failure modes
 3. `package.json` — scripts, deps, version
-4. `server.js` — HTTPS proxy (the main Node.js code)
-5. `apk/app/src/main/java/com/t3code/app/MainActivity.java` — Android app (single activity)
-6. `sw.js` — service worker
-7. `webview-harness.js` — local test harness
-8. `smoke-proxy.js` — proxy smoke test
-9. `check-release.js` — release validation
+4. `server.js` — HTTPS/HTTP proxy (the main Node.js code, supports `--http` flag)
+5. `IPHONE-GUIDE.md` — iPhone PWA setup guide (from scratch)
+6. `apk/app/src/main/java/com/t3code/app/MainActivity.java` — Android app (single activity)
+7. `sw.js` — service worker
+8. `webview-harness.js` — local test harness
+9. `smoke-proxy.js` — proxy smoke test
+10. `check-release.js` — release validation
 
 ## Useful Commands
 
@@ -36,9 +37,11 @@ npm run test:units                # unit tests only (lib/html.js)
 npm run harness:http              # local WebView test server (HTTP)
 npm run harness:https-bad-cert    # local WebView test server (bad cert)
 npm run harness:redirect          # local WebView test server (redirect)
+npm run start:iphone              # PWA proxy in HTTP mode for iPhone
 ```
 
 Windows APK build: `build-apk.bat`
+iPhone PWA: `npm run start:iphone` + `tailscale serve https / http://localhost:3780`
 
 ## Working Rules
 

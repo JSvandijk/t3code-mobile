@@ -1,13 +1,15 @@
 # Installation Guide
 
-This guide assumes you already use T3 Code on your main computer and want to access that same environment from an Android phone.
+This guide assumes you already use T3 Code on your main computer and want to access that same environment from your phone.
 
 ## Requirements
 
 - A Windows, macOS, or Linux machine running T3 Code
-- An Android phone
+- An Android phone or iPhone
 - Tailscale on both devices, or another trusted private network
 - A pairing link created from the T3 Code desktop app
+
+For iPhone-specific setup, see [IPHONE-GUIDE.md](IPHONE-GUIDE.md) for the complete walkthrough.
 
 ## Option A: Native Android App
 
@@ -69,9 +71,27 @@ Important update note:
 After pairing, the app remembers the base URL.
 Use the in-app `Menu` button if you want to reload the session, inspect connection info, run diagnostics, copy a report, or change the saved server later.
 
-## Option B: HTTPS PWA Proxy
+## Option B: iPhone / iPad (PWA)
 
-Use this mode if you want an installable browser version instead of the native APK.
+Use this mode to access T3 Code from an iPhone or iPad as a fullscreen home screen app.
+
+This requires the PWA proxy running on the same machine as T3 Code, plus Tailscale for the network connection and HTTPS certificates.
+
+See [IPHONE-GUIDE.md](IPHONE-GUIDE.md) for the complete step-by-step walkthrough.
+
+Quick version:
+
+```bash
+npm install
+npm run start:iphone          # start proxy in HTTP mode on port 3780
+tailscale serve https / http://localhost:3780   # expose via HTTPS
+```
+
+Then on your iPhone: open `https://your-mac.tailnet.ts.net` in Safari and tap Share -> Add to Home Screen.
+
+## Option C: HTTPS PWA Proxy (Manual Certificates)
+
+Use this mode if you want to manage your own HTTPS certificates instead of using Tailscale Serve.
 
 ### 1. Prepare Certificates
 
