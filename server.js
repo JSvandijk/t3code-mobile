@@ -435,7 +435,6 @@ const handler = (req, res) => {
         ok: false,
         service: 't3code-mobile-proxy',
         version: pkg.version,
-        target: T3_TARGET,
         timestamp: new Date().toISOString(),
         error: error.message,
       });
