@@ -222,9 +222,9 @@ The `tailscale serve` configuration persists across reboots by default.
 - The proxy might not be running. Start it with `npm run start:iphone`.
 - Tailscale might be disconnected. Check the Tailscale app on your iPhone.
 
-### Image upload does not work
+### Image upload button does not appear
 
-The PWA does not include the native image upload button that the Android app has. Use the standard T3 Code file attachment flow (drag and drop on desktop, or the built-in T3 Code upload if available).
+The image upload button is injected by the proxy after the T3 Code composer loads. If the button does not appear, try reloading the page. If the T3 Code UI changes its composer layout, the button placement may need updating.
 
 ### How to update
 
@@ -255,7 +255,7 @@ Differences:
 |---------|-------------|------------|
 | Install method | APK sideload | Safari Add to Home Screen |
 | Runs without browser | Yes (WebView) | Yes (Safari standalone) |
-| Custom image upload button | Yes | No (use T3 Code built-in) |
+| Custom image upload button | Yes | Yes (injected by proxy) |
 | Connection diagnostics | Yes (in-app) | No |
 | Offline support | No | Static assets only (icons, manifest) |
 | Requires proxy | No | Yes |
