@@ -270,6 +270,29 @@ Current behavior:
 
 - health results are cached for 5 seconds to prevent probe amplification
 
+## Maintenance Updates (May 5, 2026)
+
+### 15. Proxy deployment boundaries documented
+
+Previous behavior:
+
+- proxy deployment warnings were spread across README, SECURITY, and audit notes
+
+Current behavior:
+
+- `docs/PROXY-DEPLOYMENT.md` now provides a concrete checklist for trusted-network use, unsafe public exposure patterns, minimum setup, and verification
+
+### 16. Upload-injection path has automated assertions
+
+Previous behavior:
+
+- upload-button behavior was stronger visually than mechanically asserted
+
+Current behavior:
+
+- `npm test` now runs DOM-level assertions for proxy upload button placement, hidden file input creation, paste-event dispatch, and fallback placement
+- Android WebView upload injection has source-marker checks for the critical IDs, composer selectors, paste flow, observer, and fallback path
+
 ## Recommended Next Security Steps
 
 - add optional host allowlisting for more than one trusted origin if the product needs it

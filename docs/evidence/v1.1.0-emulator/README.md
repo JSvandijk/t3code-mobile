@@ -18,7 +18,7 @@ This evidence set does not prove:
 - behavior on a physical Android device
 - microphone permission flow
 - real T3 Code upstream behavior beyond the local harness and existing repo smoke tests
-- upload-button behavior by machine-readable assertion
+- Android upload-button behavior by current runtime evidence
 
 ## Environment
 
@@ -150,5 +150,5 @@ This evidence set was captured against commit `7b7680807bd97f06802fd98783096dd37
 ## Status Summary
 
 - Proven by emulator runtime evidence: connect screen, diagnostics path, pairing-link input acceptance, cleartext warning, base URL normalization, invalid HTTPS blocking
-- Proven by automated checks: manifest integrity, release gates, proxy smoke path, proxy header expectations
-- Still not proven here: physical-device behavior, microphone permission path, and machine-verifiable upload-button assertion
+- Proven by current automated checks: manifest integrity, release gates, proxy smoke path, proxy header expectations, proxy upload-injection DOM assertions
+- Still not proven here: physical-device behavior, microphone permission path, and Android upload-button behavior on the latest runtime

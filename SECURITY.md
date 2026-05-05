@@ -33,3 +33,5 @@ Target response windows:
 - Use trusted certificates for HTTPS where possible.
 - Do not commit TLS keys, certificates, `.env` files, or signed build artifacts to the repository.
 - Review WebView and proxy settings carefully before broader deployment.
+
+Proxy deployment boundaries are documented in [docs/PROXY-DEPLOYMENT.md](docs/PROXY-DEPLOYMENT.md).

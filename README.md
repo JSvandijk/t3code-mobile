@@ -215,6 +215,7 @@ If you want the technical breakdown instead of the public pitch, read [docs/ARCH
 | Runtime verification | [docs/RUNTIME-VERIFICATION.md](docs/RUNTIME-VERIFICATION.md) |
 | Security audit | [docs/SECURITY-AUDIT.md](docs/SECURITY-AUDIT.md) |
 | WebView harness | [docs/WEBVIEW-HARNESS.md](docs/WEBVIEW-HARNESS.md) |
+| Proxy deployment | [docs/PROXY-DEPLOYMENT.md](docs/PROXY-DEPLOYMENT.md) |
 | Release runbook | [docs/RELEASE-RUNBOOK.md](docs/RELEASE-RUNBOOK.md) |
 | Publishing checklist | [docs/PUBLISHING-CHECKLIST.md](docs/PUBLISHING-CHECKLIST.md) |
 | Showcase | [docs/SHOWCASE.md](docs/SHOWCASE.md) |
@@ -227,6 +228,7 @@ If you want the technical breakdown instead of the public pitch, read [docs/ARCH
 - HTTPS is preferred when you can issue a trusted certificate.
 - Cleartext HTTP remains supported for Tailscale or another trusted private network because that is a core self-hosted use case, but the app now warns before every HTTP session.
 - The app intentionally stays scoped to one configured server host inside the WebView; other destinations open outside the app.
+- The optional proxy is self-hosted infrastructure for trusted networks. Check [docs/PROXY-DEPLOYMENT.md](docs/PROXY-DEPLOYMENT.md) before exposing it through any reverse proxy.
 
 See [docs/SECURITY-AUDIT.md](docs/SECURITY-AUDIT.md) for the current audit notes, fixes, and remaining tradeoffs.
 
