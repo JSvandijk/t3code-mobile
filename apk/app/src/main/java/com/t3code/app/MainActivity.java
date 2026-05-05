@@ -12,7 +12,6 @@ import android.content.SharedPreferences;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.graphics.Color;
-import android.graphics.PorterDuff;
 import android.net.ConnectivityManager;
 import android.net.Network;
 import android.net.NetworkCapabilities;
@@ -53,6 +52,7 @@ import android.widget.Toast;
 
 import java.io.InputStream;
 import java.net.HttpURLConnection;
+import java.net.URI;
 import java.net.URL;
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -292,7 +292,6 @@ public class MainActivity extends Activity {
         WebSettings settings = webView.getSettings();
         settings.setJavaScriptEnabled(true);
         settings.setDomStorageEnabled(true);
-        settings.setDatabaseEnabled(true);
         settings.setMediaPlaybackRequiresUserGesture(false);
         settings.setCacheMode(WebSettings.LOAD_DEFAULT);
         settings.setMixedContentMode(isHttpsUrl(url)
@@ -304,8 +303,6 @@ public class MainActivity extends Activity {
         settings.setJavaScriptCanOpenWindowsAutomatically(false);
         settings.setSupportMultipleWindows(false);
         settings.setUserAgentString(settings.getUserAgentString() + " T3CodeMobile/" + getAppVersionName());
-        settings.setAllowFileAccessFromFileURLs(false);
-        settings.setAllowUniversalAccessFromFileURLs(false);
         if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
             settings.setSafeBrowsingEnabled(true);
         }
@@ -384,17 +381,6 @@ public class MainActivity extends Activity {
                 }
                 updateWebViewPresentation();
                 injectImageButton();
-            }
-
-            @Override
-            public void onReceivedError(WebView view, int errorCode, String description, String failingUrl) {
-                super.onReceivedError(view, errorCode, description, failingUrl);
-                cancelLoadTimeout();
-                currentLoadFailed = true;
-                lastErrorMessage = description != null ? description : "Unknown network error";
-                lastSuggestedFix = "Verify the host, port, and Tailscale or LAN reachability, then try again.";
-                updateWebViewPresentation();
-                showPageError("Connection problem", lastErrorMessage);
             }
 
             @Override
@@ -503,7 +489,7 @@ public class MainActivity extends Activity {
 
         loadingBar = new ProgressBar(this, null, android.R.attr.progressBarStyleHorizontal);
         loadingBar.setMax(100);
-        loadingBar.getProgressDrawable().setColorFilter(Color.parseColor("#6C63FF"), PorterDuff.Mode.SRC_IN);
+        loadingBar.getProgressDrawable().setTint(Color.parseColor("#6C63FF"));
         FrameLayout.LayoutParams loadingParams = new FrameLayout.LayoutParams(
             FrameLayout.LayoutParams.MATCH_PARENT,
             dp(3)
@@ -854,7 +840,7 @@ public class MainActivity extends Activity {
         HttpURLConnection connection = null;
 
         try {
-            URL url = new URL(urlString);
+            URL url = URI.create(urlString).toURL();
             connection = (HttpURLConnection) url.openConnection();
             connection.setConnectTimeout(DIAGNOSTIC_TIMEOUT_MS);
             connection.setReadTimeout(DIAGNOSTIC_TIMEOUT_MS);

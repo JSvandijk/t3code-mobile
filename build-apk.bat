@@ -221,7 +221,7 @@ echo [4/8] Compiling Java sources
 dir /s /b "%SRC%\java\*.java" > "%BUILD%\sources.txt"
 dir /s /b "%GEN%\*.java" >> "%BUILD%\sources.txt"
 
-javac -source 11 -target 11 ^
+javac --release 11 ^
     -classpath "%PLATFORM%\android.jar" ^
     -d "%CLASSES%" ^
     @"%BUILD%\sources.txt"
