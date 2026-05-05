@@ -66,6 +66,7 @@ Use `npm run harness:redirect` to confirm:
 - If those files are absent, the harness generates a temporary self-signed certificate automatically.
 - Override paths with `SSL_KEY_PATH` and `SSL_CERT_PATH` if needed.
 - The harness also exposes `/status` for quick local checks.
+- `npm test` runs DOM-level upload injection assertions for the proxy path and source-marker checks for the Android WebView path.
 - Pair this guide with [RUNTIME-VERIFICATION.md](RUNTIME-VERIFICATION.md) when you are collecting release evidence.
 
 ## Recommended Evidence To Capture

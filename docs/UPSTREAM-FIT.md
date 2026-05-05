@@ -19,7 +19,7 @@ This project is most credible to `pingdotgg/t3code` when it stays narrow and rel
 ## Current Validation
 
 Last checked: 2026-05-05 on `main` after the ESLint 10 and Node runtime update in
-[`JSvandijk/t3code-mobile#19`](https://github.com/JSvandijk/t3code-mobile/pull/19).
+[`JSvandijk/t3code-mobile#19`](https://github.com/JSvandijk/t3code-mobile/pull/19), plus the follow-up proxy deployment and upload-assertion maintenance.
 
 - `npm test` passes from a clean local checkout after `npm ci`.
 - JavaScript syntax checks pass.
@@ -27,6 +27,7 @@ Last checked: 2026-05-05 on `main` after the ESLint 10 and Node runtime update i
 - `manifest.json` validation passes.
 - Release checks pass for version `1.1.0`.
 - HTML unit tests pass: 18/18.
+- Upload-injection tests pass: 5/5.
 - Proxy smoke test passes, including HTML injection, static assets, and `GET /__t3mobile/health`.
 - `cmd /c build-apk.bat` builds a dev-signed APK successfully.
 

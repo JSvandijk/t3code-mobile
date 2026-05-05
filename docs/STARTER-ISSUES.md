@@ -20,24 +20,7 @@ Labels:
 - `docs`
 - `help wanted`
 
-## 2. Add automated assertion coverage for the upload-button path
-
-Why it matters:
-
-- the upload flow is one of the core product claims
-- it is still stronger visually than it is mechanically asserted
-
-Suggested scope:
-
-- expand the local harness or verification flow so the injected control can be asserted more directly
-- document what is and is not guaranteed by the automated check
-
-Labels:
-
-- `android`
-- `help wanted`
-
-## 3. Harden DOM targeting for composer upload injection
+## 2. Harden DOM targeting for composer upload injection
 
 Why it matters:
 
@@ -54,6 +37,24 @@ Labels:
 
 - `android`
 - `good first issue`
+
+## 3. Add iPhone PWA runtime evidence
+
+Why it matters:
+
+- the PWA path has automated proxy coverage but still needs real-device proof
+- iOS-specific install and safe-area behavior should be checked on hardware
+
+Suggested scope:
+
+- install the PWA on a real iPhone or iPad
+- capture connection, launch-from-home-screen, and proxy health evidence
+- update `IPHONE-GUIDE.md` if device behavior differs from the current notes
+
+Labels:
+
+- `docs`
+- `help wanted`
 
 ## 4. Add a release demo clip for the README and release page
 
@@ -72,20 +73,20 @@ Labels:
 - `community`
 - `docs`
 
-## 5. Improve proxy deployment guidance for self-hosted users
+## 5. Add release signing verification notes
 
 Why it matters:
 
-- the proxy is useful but easy to misunderstand
-- better deployment guidance lowers support overhead
+- Android update trust depends on stable signing identity
+- signing continuity is the highest-risk release operations gap
 
 Suggested scope:
 
-- expand docs around trusted-network assumptions
-- add a short “when not to expose this” checklist
-- keep the guidance aligned with `SECURITY.md`
+- document the intended public release signing fingerprint
+- add a release-time manual verification step for signer continuity
+- keep private signing material out of the repo
 
 Labels:
 
-- `proxy`
-- `docs`
+- `android`
+- `security`
