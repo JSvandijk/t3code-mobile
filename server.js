@@ -36,7 +36,7 @@ function parseUrlEnv(name, fallback, allowedProtocols) {
 
   try {
     parsed = new URL(rawValue);
-  } catch (error) {
+  } catch {
     failFast(`${name} must be a valid absolute URL. Received: ${rawValue}`);
   }
 
@@ -115,7 +115,7 @@ for (const [urlPath, def] of Object.entries(staticFileDefinitions)) {
       type: def.type,
       cacheControl: def.cacheControl,
     };
-  } catch (e) {
+  } catch {
     console.warn(`[t3code-mobile] Static file not found at startup: ${def.file}`);
   }
 }
