@@ -99,11 +99,14 @@ public class MainActivity extends Activity {
         getWindow().setStatusBarColor(Color.parseColor("#161616"));
         getWindow().setNavigationBarColor(Color.parseColor("#161616"));
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-            WindowInsetsController insetsController = getWindow().getInsetsController();
-            if (insetsController != null) {
-                insetsController.setSystemBarsBehavior(
-                    WindowInsetsController.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
-                );
+            View decor = getWindow().getDecorView();
+            if (decor != null) {
+                WindowInsetsController insetsController = decor.getWindowInsetsController();
+                if (insetsController != null) {
+                    insetsController.setSystemBarsBehavior(
+                        WindowInsetsController.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
+                    );
+                }
             }
         } else {
             getWindow().getDecorView().setSystemUiVisibility(
